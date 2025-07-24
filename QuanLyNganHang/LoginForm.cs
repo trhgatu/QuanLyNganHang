@@ -85,7 +85,7 @@ namespace QuanLyNganHang
 
             Label titleLabel = new Label
             {
-                Text = "NGÂN HÀNG QUỐC GIA",
+                Text = "NGÂN HÀNG 3T",
                 Font = new Font("Segoe UI", 18, FontStyle.Bold),
                 ForeColor = Color.White,
                 AutoSize = false,
@@ -496,7 +496,6 @@ namespace QuanLyNganHang
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        // Your existing login logic with enhancements
         bool Check_Textbox(string host, string port, string sid, string user, string pass)
         {
             var validations = new[]
@@ -524,31 +523,27 @@ namespace QuanLyNganHang
         {
             string status = Database.Get_Status(user);
             string v;
-            if (status == "LOCKED" || status == "LOCKED(TIMED)")
+            if (status.Contains("ORA-28000") || status.ToUpper().Contains("LOCKED"))
                 v = "🔒 Tài khoản bị khóa";
-            else if (status == "EXPIRED(GRACE)")
+            else if (status.Equals("LOCKED(TIMED)"))
+                v = "🔒 Tài khoản bị khóa tạm thời";
+            else if (status.Equals("EXPIRED(GRACE)"))
                 v = "⚠️ Tài khoản sắp hết hạn";
-            else if (status == "EXPIRED & LOCKED(TIMED)")
+            else if (status.Equals("EXPIRED & LOCKED(TIMED)"))
                 v = "🔒 Tài khoản bị khóa do hết hạn";
-            else if (status == "EXPIRED")
+            else if (status.Equals("EXPIRED"))
                 v = "⏰ Tài khoản hết hạn";
             else if (status == " ")
                 v = "❌ Tài khoản không tồn tại";
             else
-                v = "❌ Đăng nhập thất bại!\nKiểm tra lại thông tin đăng nhập";
-            string message = v;
+                v = "❌ Đăng nhập thất bại!";
 
-            ShowError(message);
+            ShowError(v);
         }
+
 
         private async void btn_Login_Click(object sender, EventArgs e)
         {
-            if (loginAttempts >= MAX_LOGIN_ATTEMPTS)
-            {
-                ShowError("🚫 Tài khoản tạm thời bị khóa do quá nhiều lần đăng nhập sai!");
-                return;
-            }
-
             string host = txt_Host.Text;
             string port = txt_Port.Text;
             string sid = txt_Sid.Text;
@@ -557,26 +552,16 @@ namespace QuanLyNganHang
 
             if (Check_Textbox(host, port, sid, user, pass))
             {
-                // Show loading
                 ShowLoading(true);
                 btn_Login.Enabled = false;
 
                 try
                 {
-                    await Task.Run(() =>
-                    {
-                        Database.Set_Database(host, port, sid, user, pass);
-                        return Database.Connect();
-                    });
-
+                    Database.Set_Database(host, port, sid, user, pass);
                     if (Database.Connect())
                     {
                         OracleConnection c = Database.Get_Connect();
 
-                        // Log successful login
-                        LogLoginAttempt(user, true);
-
-                        // Save settings if remember me is checked
                         if (chk_RememberMe.Checked)
                         {
                             SaveLoginCredentials(user);
@@ -584,26 +569,20 @@ namespace QuanLyNganHang
 
                         ShowSuccess($"✅ Đăng nhập thành công!\nServer Version: {c.ServerVersion}");
 
-                        await Task.Delay(1500); // Show success message briefly
+                        await Task.Delay(1500);
 
-                        Database.Close_Connect();
+                        
                         this.Hide();
 
                         DashboardForm dashboardForm = new DashboardForm();
                         dashboardForm.ShowDialog();
-
+                        Database.Close_Connect();
                         this.Close();
                     }
                     else
                     {
-                        loginAttempts++;
-                        LogLoginAttempt(user, false);
                         Check_Status(user);
-
-                        if (loginAttempts >= MAX_LOGIN_ATTEMPTS)
-                        {
-                            StartLockoutTimer();
-                        }
+                        return;
                     }
                 }
                 catch (Exception ex)
@@ -618,7 +597,6 @@ namespace QuanLyNganHang
             }
         }
 
-        // UI Helper methods
         private void ShowLoading(bool show)
         {
             progressBar.Visible = show;
@@ -659,37 +637,6 @@ namespace QuanLyNganHang
         {
             lbl_Status.Text = message;
             lbl_Status.ForeColor = Color.FromArgb(46, 204, 113);
-        }
-
-        // Security and persistence methods
-        private void StartLockoutTimer()
-        {
-            lockoutTimer = new Timer { Interval = 300000 }; // 5 minutes
-            lockoutTimer.Tick += (s, e) =>
-            {
-                loginAttempts = 0;
-                lockoutTimer.Stop();
-                ShowSuccess("🔓 Tài khoản đã được mở khóa. Bạn có thể thử đăng nhập lại.");
-            };
-            lockoutTimer.Start();
-        }
-
-        private void LogLoginAttempt(string username, bool success)
-        {
-            try
-            {
-                string logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] User: {username}, " +
-                                $"Success: {success}, IP: {GetLocalIP()}";
-                System.IO.File.AppendAllText("login_log.txt", logEntry + Environment.NewLine);
-            }
-            catch { /* Log errors silently */ }
-        }
-
-        private string GetLocalIP()
-        {
-            return System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName())
-                .AddressList.FirstOrDefault(ip => ip.AddressFamily ==
-                System.Net.Sockets.AddressFamily.InterNetwork)?.ToString() ?? "Unknown";
         }
 
         private void SaveConnectionSettings()

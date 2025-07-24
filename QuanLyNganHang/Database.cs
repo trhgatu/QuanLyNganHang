@@ -76,87 +76,60 @@ namespace QuanLyNganHang
                 return false;
             }
         }
-
-        public static bool ConnectSys()
-        {
-            try
-            {
-                string connString = "Data Source=(DESCRIPTION =(ADDRESS = (PROTOCOL = TCP)(HOST = "
-               + Host + ")(PORT = "
-               + Port + "))(CONNECT_DATA = (SERVER = DEDICATED)(SERVICE_NAME = "
-               + Sid + ")));User ID=sysuser; Password = 123";
-                connSys = new OracleConnection();
-                connSys.ConnectionString = connString;
-                connSys.Open();
-                return true;
-            }
-            catch
-            {
-                MessageBox.Show("Kiểm tra lại chuỗi kết nối");
-                return false;
-            }
-        }
-        public static OracleConnection Get_ConnectSys()
-        {
-            if (connSys == null)
-            {
-                ConnectSys();
-            }
-            if (connSys.State.ToString().Equals("Closed"))
-            {
-                connSys.Open();
-            }
-            return connSys;
-        }
-
-        public static void Close_ConnectSYS()
-        {
-            if (connSys.State.ToString().Equals("Open"))
-            {
-                connSys.Close();
-            }
-        }
         public static string Get_Status(string user)
         {
             try
             {
                 string Function = "fun_account_status";
 
-                OracleCommand cmd = new OracleCommand();
-                OracleConnection cnn = Get_ConnectSys();
-                cmd.Connection = cnn;
-                cmd.CommandText = Function;
-                cmd.CommandType = CommandType.StoredProcedure;
+                OracleConnection cnn = Get_Connect();
 
-                OracleParameter resultParam = new OracleParameter();
-                resultParam.ParameterName = "@Result";
-                resultParam.OracleDbType = OracleDbType.Varchar2;
-                resultParam.Size = 100;
-                resultParam.Direction = ParameterDirection.ReturnValue;
+                // ✅ ĐẢM BẢO KẾT NỐI MỞ
+                if (cnn.State != ConnectionState.Open)
+                {
+                    cnn.Open();
+                }
+
+                OracleCommand cmd = new OracleCommand
+                {
+                    Connection = cnn,
+                    CommandText = Function,
+                    CommandType = CommandType.StoredProcedure
+                };
+
+                OracleParameter resultParam = new OracleParameter
+                {
+                    ParameterName = "@Result",
+                    OracleDbType = OracleDbType.Varchar2,
+                    Size = 100,
+                    Direction = ParameterDirection.ReturnValue
+                };
                 cmd.Parameters.Add(resultParam);
 
-                OracleParameter UserName = new OracleParameter();
-                UserName.ParameterName = "@User";
-                UserName.OracleDbType = OracleDbType.Varchar2;
-                UserName.Value = user.ToUpper();
-                UserName.Direction = ParameterDirection.Input;
+                OracleParameter UserName = new OracleParameter
+                {
+                    ParameterName = "@User",
+                    OracleDbType = OracleDbType.Varchar2,
+                    Value = user.ToUpper(),
+                    Direction = ParameterDirection.Input
+                };
                 cmd.Parameters.Add(UserName);
 
                 cmd.ExecuteNonQuery();
 
                 if (resultParam.Value != DBNull.Value)
                 {
-                    OracleString ret = (OracleString)resultParam.Value;
-                    string s = ret.ToString();
-                    return s;
+                    return ((OracleString)resultParam.Value).ToString().Trim();
                 }
             }
             catch (Exception ex)
             {
                 return "Error: " + ex.Message;
             }
+
             return "";
         }
+
 
     }
 }

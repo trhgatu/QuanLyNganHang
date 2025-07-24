@@ -244,29 +244,28 @@ namespace QuanLyNganHang
             // Quick stats
             Panel statsPanel = CreateStatsPanel(new[]
             {
-                ("Tổng Admin", "5", Color.FromArgb(231, 76, 60)),
-                ("Tổng Nhân viên", "25", Color.FromArgb(52, 152, 219)),
-                ("Đang hoạt động", "28", Color.FromArgb(46, 204, 113)),
-                ("Bị khóa", "2", Color.FromArgb(241, 196, 15))
-            });
+        ("Tổng Admin", "5", Color.FromArgb(231, 76, 60)),
+        ("Tổng Nhân viên", "25", Color.FromArgb(52, 152, 219)),
+        ("Đang hoạt động", "28", Color.FromArgb(46, 204, 113)),
+        ("Bị khóa", "2", Color.FromArgb(241, 196, 15))
+    });
             contentPanel.Controls.Add(statsPanel);
 
-            // Action buttons
+            // Action buttons với actions được định nghĩa
             Panel actionPanel = CreateActionPanel(new[]
             {
-                ("Thêm Admin", Color.FromArgb(231, 76, 60)),
-                ("Thêm Nhân viên", Color.FromArgb(52, 152, 219)),
-                ("Phân quyền", Color.FromArgb(155, 89, 182)),
-                ("Đặt lại mật khẩu", Color.FromArgb(241, 196, 15))
-            });
+        ("Thêm Admin", Color.FromArgb(231, 76, 60), (Action)ShowAddAdminForm),
+        ("Profile", Color.FromArgb(231, 76, 60), (Action)ShowProfileForm),
+        ("Thêm Nhân viên", Color.FromArgb(52, 152, 219), (Action)ShowAddEmployeeForm),
+        ("Phân quyền", Color.FromArgb(155, 89, 182), (Action)ShowPermissionForm),
+        ("Đặt lại mật khẩu", Color.FromArgb(241, 196, 15), (Action)ShowResetPasswordForm)
+    });
             contentPanel.Controls.Add(actionPanel);
 
-            // Data grid
             DataGridView dgv = CreateDataGrid();
             dgv.Location = new Point(20, 300);
             dgv.Size = new Size(contentPanel.Width - 40, contentPanel.Height - 320);
 
-            // Sample data for user management
             dgv.Columns.Add("ID", "ID");
             dgv.Columns.Add("Username", "Tên đăng nhập");
             dgv.Columns.Add("FullName", "Họ tên");
@@ -277,6 +276,45 @@ namespace QuanLyNganHang
             contentPanel.Controls.Add(dgv);
         }
 
+        private void ShowProfileForm()
+        {
+            try
+            {
+                Profile_GUI profileForm = new Profile_GUI();
+                profileForm.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi mở form Profile: {ex.Message}", "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        private void ShowAddAdminForm()
+        {
+            MessageBox.Show("Chức năng thêm Admin đang được phát triển", "Thông báo",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void ShowAddEmployeeForm()
+        {
+            MessageBox.Show("Chức năng thêm Nhân viên đang được phát triển", "Thông báo",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            // TODO: Implement Add Employee form
+        }
+
+        private void ShowPermissionForm()
+        {
+            MessageBox.Show("Chức năng Phân quyền đang được phát triển", "Thông báo",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            // TODO: Implement Permission management form
+        }
+
+        private void ShowResetPasswordForm()
+        {
+            MessageBox.Show("Chức năng Đặt lại mật khẩu đang được phát triển", "Thông báo",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            // TODO: Implement Reset Password form
+        }
         private void LoadCustomerManagement()
         {
             contentPanel.Controls.Clear();
@@ -354,6 +392,11 @@ namespace QuanLyNganHang
             dgv.Columns.Add("OpenDate", "Ngày mở");
 
             contentPanel.Controls.Add(dgv);
+        }
+
+        private Panel CreateActionPanel((string, Color)[] values)
+        {
+            throw new NotImplementedException();
         }
 
         private void LoadTransactionManagement()
@@ -678,7 +721,7 @@ namespace QuanLyNganHang
             return panel;
         }
 
-        private Panel CreateActionPanel((string text, Color color)[] actions)
+        private Panel CreateActionPanel((string text, Color color, Action action)[] actions)
         {
             Panel panel = new Panel
             {
@@ -700,15 +743,33 @@ namespace QuanLyNganHang
                     ForeColor = Color.White,
                     FlatStyle = FlatStyle.Flat,
                     Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                    Cursor = Cursors.Hand
+                    Cursor = Cursors.Hand,
+                    Tag = actions[i].action // Lưu action vào Tag
                 };
                 btn.FlatAppearance.BorderSize = 0;
+
+                // Gán sự kiện click
+                btn.Click += ActionButton_Click;
+
                 panel.Controls.Add(btn);
             }
 
             return panel;
         }
-
+        private void ActionButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                Button btn = sender as Button;
+                Action action = btn.Tag as Action;
+                action?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi thực hiện thao tác: {ex.Message}", "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
         private DataGridView CreateDataGrid()
         {
             return new DataGridView

@@ -23,7 +23,9 @@ namespace QuanLyNganHang
         {
             try
             {
-                string Procedure = "pro_profile_Name";
+                if (conn.State != ConnectionState.Open)
+                    conn.Open();
+                string Procedure = "pro_profile_name";
                 OracleCommand cmd = new OracleCommand();
                 cmd.Connection = conn;
                 cmd.CommandText = Procedure;
