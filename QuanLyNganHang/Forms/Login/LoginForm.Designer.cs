@@ -42,13 +42,6 @@
         }
 
         #endregion
-
-        private System.Windows.Forms.Button btn_Login;
-        private System.Windows.Forms.TextBox txt_Password;
-        private System.Windows.Forms.TextBox txt_User;
-        private System.Windows.Forms.TextBox txt_Sid;
-        private System.Windows.Forms.TextBox txt_Port;
-        private System.Windows.Forms.TextBox txt_Host;
     }
 }
 

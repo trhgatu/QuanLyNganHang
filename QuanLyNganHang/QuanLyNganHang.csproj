@@ -84,19 +84,31 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DashboardForm.cs">
+    <Compile Include="Forms\Dashboard\ContentManager.cs" />
+    <Compile Include="Forms\Dashboard\DashboardConstants.cs" />
+    <Compile Include="Forms\Dashboard\DashboardForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="DashboardForm.Designer.cs">
+    <Compile Include="Forms\Dashboard\DashboardForm.Designer.cs">
       <DependentUpon>DashboardForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Database.cs" />
-    <Compile Include="LoginForm.cs">
+    <Compile Include="Database\Database.cs" />
+    <Compile Include="Forms\Dashboard\DashboardUIFactory.cs" />
+    <Compile Include="Forms\Dashboard\HeaderManager.cs" />
+    <Compile Include="Forms\Dashboard\MenuManager.cs" />
+    <Compile Include="Forms\Login\ConnectionManager.cs" />
+    <Compile Include="Forms\Login\LeftPanelManager.cs" />
+    <Compile Include="Forms\Login\LoginConstants.cs" />
+    <Compile Include="Forms\Login\LoginForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="LoginForm.Designer.cs">
+    <Compile Include="Forms\Login\LoginForm.Designer.cs">
       <DependentUpon>LoginForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\Login\LoginUIFactory.cs" />
+    <Compile Include="Forms\Login\LoginValidator.cs" />
+    <Compile Include="Forms\Login\SettingsManager.cs" />
+    <Compile Include="Forms\Login\StatusManager.cs" />
     <Compile Include="Profile.cs" />
     <Compile Include="Profile_GUI.cs">
       <SubType>Form</SubType>
@@ -106,7 +118,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="LoginForm.resx">
+    <EmbeddedResource Include="Forms\Login\LoginForm.resx">
       <DependentUpon>LoginForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Profile_GUI.resx">

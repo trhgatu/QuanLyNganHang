@@ -13,7 +13,6 @@ namespace QuanLyNganHang
     public class Database
     {
         public static OracleConnection Conn;
-        private static OracleConnection connSys;
 
         public static string Host;
         public static string Port;
