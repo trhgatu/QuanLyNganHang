@@ -84,12 +84,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataAccess\AuditLogDataAccess.cs" />
+    <Compile Include="DataAccess\PermissionDataAccess.cs" />
+    <Compile Include="DataAccess\ReportsDataAccess.cs" />
+    <Compile Include="DataAccess\SettingsDataAccess.cs" />
+    <Compile Include="DataAccess\TransactionDataAccess.cs" />
     <Compile Include="DataAccess\UserDataAccess.cs" />
     <Compile Include="Forms\Dashboard\ContentManager.cs" />
     <Compile Include="Forms\Dashboard\Content\AccountManagementContent.cs" />
+    <Compile Include="Forms\Dashboard\Content\AuditLogContent.cs" />
     <Compile Include="Forms\Dashboard\Content\BaseContent.cs" />
     <Compile Include="Forms\Dashboard\Content\ContentFactory.cs" />
     <Compile Include="Forms\Dashboard\Content\CustomerManagementContent.cs" />
+    <Compile Include="Forms\Dashboard\Content\PermissionManagementContent.cs" />
+    <Compile Include="Forms\Dashboard\Content\ReportsContent.cs" />
+    <Compile Include="Forms\Dashboard\Content\SettingsContent.cs" />
+    <Compile Include="Forms\Dashboard\Content\TransactionManagementContent.cs" />
     <Compile Include="Forms\Dashboard\Content\UserManagementContent.cs" />
     <Compile Include="Forms\Dashboard\DashboardConstants.cs" />
     <Compile Include="Forms\Dashboard\DashboardForm.cs">

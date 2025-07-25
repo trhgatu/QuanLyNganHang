@@ -20,16 +20,16 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                     return new CustomerManagementContent(contentPanel);
                 case "AccountManagement":
                     return new AccountManagementContent(contentPanel);
-                //case "TransactionManagement":
-                    //return new TransactionManagementContent(contentPanel);
-                //case "PermissionManagement":
-                    //return new PermissionManagementContent(contentPanel);
-               // case "AuditLog":
-                //    return new AuditLogContent(contentPanel);
-                //case "Reports":
-                    //return new ReportsContent(contentPanel);
-                //case "Settings":
-                    //return new SettingsContent(contentPanel);
+                case "TransactionManagement":
+                    return new TransactionManagementContent(contentPanel);
+                case "PermissionManagement":
+                    return new PermissionManagementContent(contentPanel);
+                case "AuditLog":
+                    return new AuditLogContent(contentPanel);
+                case "Reports":
+                    return new ReportsContent(contentPanel);
+                case "Settings":
+                    return new SettingsContent(contentPanel);
                default:
                    return new UserManagementContent(contentPanel);
             }
