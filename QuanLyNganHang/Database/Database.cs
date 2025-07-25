@@ -30,15 +30,33 @@ namespace QuanLyNganHang
             Database.User = user;
             Database.Password = pass;
         }
-
+        public static string GetConnectionString()
+        {
+            string connsys = User.ToUpper().Equals("SYS") ? ";DBA Privilege=SYSDBA;" : "";
+            return "Data Source=(DESCRIPTION =(ADDRESS = (PROTOCOL = TCP)(HOST = "
+                + Host + ")(PORT = " + Port + "))(CONNECT_DATA = (SERVER = DEDICATED)(SERVICE_NAME = "
+                + Sid + ")));User ID=" + User + " ; Password = " + Password + connsys;
+        }
         public static OracleConnection Get_Connect()
         {
-            if (Conn == null)
+            if (Conn == null || Conn.State == ConnectionState.Broken || Conn.State == ConnectionState.Closed)
             {
                 Connect();
+                Console.WriteLine(">>> Current DB user: " + Database.User);
+                Console.WriteLine(">>> Conn state: " + (Conn?.State.ToString() ?? "NULL"));
             }
+
+
+            if (Conn != null && Conn is IDisposable disposable && Conn.State == ConnectionState.Closed)
+            {
+                Conn.Dispose();
+                Conn = null;
+                Connect(); 
+            }
+
             return Conn;
         }
+
 
         public static void Close_Connect()
         {
@@ -50,27 +68,13 @@ namespace QuanLyNganHang
 
         public static bool Connect()
         {
-            string connsys = "";
             try
             {
-                if (User.ToUpper().Equals("SYS"))
-                {
-                    connsys = ";DBA Privilege=SYSDBA;";
-                }
-                string connString = "Data Source=(DESCRIPTION =(ADDRESS = (PROTOCOL = TCP)(HOST = "
-                    + Host + ")(PORT = "
-                    + Port + "))(CONNECT_DATA = (SERVER = DEDICATED)(SERVICE_NAME = "
-                    + Sid + ")));User ID="
-                    + User + " ; Password = "
-                    + Password + connsys;
-
-                Conn = new OracleConnection();
-                Conn.ConnectionString = connString;
+                Conn = new OracleConnection(GetConnectionString());
                 Conn.Open();
-
                 return true;
             }
-            catch (Exception ex)
+            catch
             {
                 return false;
             }
@@ -83,7 +87,6 @@ namespace QuanLyNganHang
 
                 OracleConnection cnn = Get_Connect();
 
-                // ✅ ĐẢM BẢO KẾT NỐI MỞ
                 if (cnn.State != ConnectionState.Open)
                 {
                     cnn.Open();

@@ -214,7 +214,7 @@ namespace QuanLyNganHang
             string pass = txt_Password.Text;
 
             if (!loginValidator.ValidateInputs(host, port, sid, user, pass,
-                null, null, null, txt_User, txt_Password)) // Connection textboxes handled internally
+                null, null, null, txt_User, txt_Password))
                 return;
 
             statusManager.ShowLoading(true);
@@ -237,7 +237,7 @@ namespace QuanLyNganHang
                     this.Hide();
                     DashboardForm dashboardForm = new DashboardForm();
                     dashboardForm.ShowDialog();
-                    Database.Close_Connect();
+                   // Database.Close_Connect();
                     this.Close();
                 }
                 else
