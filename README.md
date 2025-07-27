@@ -80,4 +80,4 @@ QuanLyNganHang/
 
 ---
 
-> *Dự án thực hiện trong khuôn khổ môn học "Hệ quản trị cơ sở dữ liệu nâng cao".*
+> *Dự án thực hiện trong khuôn khổ môn học "Thực hành Bảo mật Hệ thống thông tin".*
