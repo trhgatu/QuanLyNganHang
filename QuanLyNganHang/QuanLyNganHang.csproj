@@ -84,9 +84,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Core\SessionContext.cs" />
     <Compile Include="DataAccess\AuditLogDataAccess.cs" />
+    <Compile Include="DataAccess\EmployeeDataAccess.cs" />
     <Compile Include="DataAccess\PermissionDataAccess.cs" />
     <Compile Include="DataAccess\ReportsDataAccess.cs" />
+    <Compile Include="DataAccess\RoleDataAccess.cs" />
     <Compile Include="DataAccess\SettingsDataAccess.cs" />
     <Compile Include="DataAccess\TransactionDataAccess.cs" />
     <Compile Include="DataAccess\UserDataAccess.cs" />
@@ -125,6 +128,12 @@
     <Compile Include="Forms\Login\LoginValidator.cs" />
     <Compile Include="Forms\Login\SettingsManager.cs" />
     <Compile Include="Forms\Login\StatusManager.cs" />
+    <Compile Include="Forms\Profile\ProfileForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Profile\ProfileForm.Designer.cs">
+      <DependentUpon>ProfileForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Profile.cs" />
     <Compile Include="Profile_GUI.cs">
       <SubType>Form</SubType>

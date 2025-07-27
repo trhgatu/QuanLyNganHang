@@ -20,8 +20,6 @@ namespace QuanLyNganHang.DataAccess
                 {
                     if (connection.State != ConnectionState.Open)
                         connection.Open();
-
-                    // Query đơn giản để test
                     string query = @"
                         SELECT 
                             'TXN001' as TransactionID,
@@ -73,7 +71,6 @@ namespace QuanLyNganHang.DataAccess
             }
             catch (Exception ex)
             {
-                // Fallback với dữ liệu fake
                 dt = CreateFallbackTransactionData();
                 System.Diagnostics.Debug.WriteLine($"Database error: {ex.Message}");
             }

@@ -36,7 +36,7 @@ namespace QuanLyNganHang.Forms.Dashboard
 
         public static class Texts
         {
-            public const string AppTitle = "NGÂN HÀNG QUỐC GIA";
+            public const string AppTitle = "NGÂN HÀNG 3T";
             public const string AppVersion = "© 2025 Hệ thống Quản lý Ngân hàng - Phiên bản 1.0.0";
             public const string SystemStatus = "Hệ thống hoạt động bình thường";
         }

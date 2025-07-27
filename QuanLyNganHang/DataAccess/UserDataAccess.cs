@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Oracle.ManagedDataAccess.Client;
+using System;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Oracle.ManagedDataAccess.Client;
 
 namespace QuanLyNganHang.DataAccess
 {
     public class UserDataAccess
-    {
+    {  
         public DataTable GetAllUsers()
         {
             DataTable dt = new DataTable();
@@ -132,7 +128,6 @@ namespace QuanLyNganHang.DataAccess
                     {
                         try
                         {
-                            // Insert vào bảng system_users
                             string insertUserQuery = @"
                                 INSERT INTO system_users (user_id, username, password_hash, employee_id, status, created_date)
                                 VALUES (seq_employee_id.NEXTVAL, :username, :password_hash, :employee_id, 1, SYSDATE)";
@@ -145,8 +140,6 @@ namespace QuanLyNganHang.DataAccess
                                 command.Parameters.Add(":employee_id", employeeId);
                                 command.ExecuteNonQuery();
                             }
-
-                            // Tạo Oracle user nếu cần
                             if (!string.IsNullOrEmpty(profileName))
                             {
                                 string createOracleUserQuery = $"BEGIN pro_create_user('{username}', '{password}', '{profileName}'); END;";
@@ -234,7 +227,6 @@ namespace QuanLyNganHang.DataAccess
 
         private string HashPassword(string password)
         {
-            // Implement password hashing (SHA256 hoặc BCrypt)
             using (var sha256 = System.Security.Cryptography.SHA256.Create())
             {
                 byte[] hashedBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));

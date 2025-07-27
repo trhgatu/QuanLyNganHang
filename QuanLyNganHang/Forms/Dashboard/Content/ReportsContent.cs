@@ -23,14 +23,8 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
 
                 var title = DashboardUIFactory.CreateTitle("📊 BÁO CÁO & THỐNG KÊ", ContentPanel.Width);
                 ContentPanel.Controls.Add(title);
-
-                // Statistics đơn giản
                 LoadSimpleStatistics();
-
-                // Action panel cơ bản
                 CreateSimpleActionPanel();
-
-                // Report tabs đơn giản
                 CreateSimpleReportTabs();
             }
             catch (Exception ex)
@@ -70,8 +64,6 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                 Font = new Font("Segoe UI", 10),
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
             };
-
-            // Chỉ 3 tab cơ bản theo yêu cầu đồ án
             tabControl.TabPages.Add(CreateUserReportTab());
             tabControl.TabPages.Add(CreateSecurityReportTab());
             tabControl.TabPages.Add(CreateSystemReportTab());
@@ -88,18 +80,15 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
             grid.Size = new Size(tab.Width - 40, tab.Height - 40);
             grid.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
-            // Columns cho user report
             grid.Columns.Add("UserName", "Tên đăng nhập");
             grid.Columns.Add("LoginCount", "Số lần đăng nhập");
             grid.Columns.Add("LastLogin", "Lần cuối");
             grid.Columns.Add("Status", "Trạng thái");
 
-            // Sample data
             grid.Rows.Add("admin", "45", "25/07/2025 08:30", "Active");
             grid.Rows.Add("user1", "23", "24/07/2025 16:45", "Active");
             grid.Rows.Add("user2", "12", "23/07/2025 14:20", "Inactive");
 
-            // Configure columns
             grid.Columns["UserName"].Width = 150;
             grid.Columns["LoginCount"].Width = 120;
             grid.Columns["LastLogin"].Width = 150;
@@ -118,24 +107,17 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
             grid.Size = new Size(tab.Width - 40, tab.Height - 40);
             grid.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
-            // Columns cho security report
             grid.Columns.Add("EventType", "Loại sự kiện");
             grid.Columns.Add("UserName", "Người dùng");
             grid.Columns.Add("DateTime", "Thời gian");
             grid.Columns.Add("Result", "Kết quả");
-
-            // Sample security events
             grid.Rows.Add("Login Failed", "unknown_user", DateTime.Now.AddHours(-2).ToString("dd/MM/yyyy HH:mm"), "FAILED");
             grid.Rows.Add("Permission Denied", "user1", DateTime.Now.AddHours(-1).ToString("dd/MM/yyyy HH:mm"), "BLOCKED");
             grid.Rows.Add("Password Changed", "admin", DateTime.Now.AddMinutes(-30).ToString("dd/MM/yyyy HH:mm"), "SUCCESS");
-
-            // Configure columns
             grid.Columns["EventType"].Width = 150;
             grid.Columns["UserName"].Width = 120;
             grid.Columns["DateTime"].Width = 140;
             grid.Columns["Result"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-
-            // Color code results
             foreach (DataGridViewRow row in grid.Rows)
             {
                 string result = row.Cells["Result"].Value?.ToString();

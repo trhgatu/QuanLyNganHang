@@ -1,4 +1,6 @@
-﻿using QuanLyNganHang.Forms.Dashboard;
+﻿using QuanLyNganHang.Core;
+using QuanLyNganHang.DataAccess;
+using QuanLyNganHang.Forms.Dashboard;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -26,37 +28,32 @@ namespace QuanLyNganHang
 
         private void InitializeDashboard()
         {
-            // Form properties
             this.Size = new Size(1400, 900);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.WindowState = FormWindowState.Maximized;
             this.Text = "Hệ thống Quản lý Ngân hàng - Dashboard";
             this.BackColor = DashboardConstants.Colors.Background;
 
-            // Initialize managers
             headerManager = new HeaderManager();
+            var (fullName, roleName, employeeId, position, branchId, branchName) = EmployeeDataAccess.GetProfileFull();
+
+            SessionContext.OracleUser = Database.User.ToUpper(); 
+            SessionContext.FullName = fullName;
+            SessionContext.RoleName = roleName;
+            SessionContext.EmployeeId = employeeId;
+            SessionContext.Position = position;
+            SessionContext.BranchId = branchId;
+            SessionContext.BranchName = branchName;
+            var headerPanel = headerManager.CreateHeader(this, fullName, roleName);
+            this.Controls.Add(headerPanel);
             menuManager = new MenuManager();
             contentManager = new ContentManager();
-
-            // Create UI components
-            CreateHeader();
             CreateMenu();
             CreateContent();
             CreateFooter();
-
-            // Subscribe to events
             menuManager.MenuItemClicked += OnMenuItemClicked;
-
-            // Load default content
             contentManager.LoadContent("UserManagement");
         }
-
-        private void CreateHeader()
-        {
-            var header = headerManager.CreateHeader(this, GetCurrentUser(), GetCurrentRole());
-            this.Controls.Add(header);
-        }
-
         private void CreateMenu()
         {
             var menu = menuManager.CreateMenu(this);
@@ -126,10 +123,11 @@ namespace QuanLyNganHang
                 try
                 {
                     headerManager?.Dispose();
-                    Database.Close_Connect();
+                    SessionContext.Clear(); 
+                    Database.Close_Connect(); 
                     this.Hide();
                     LoginForm loginForm = new LoginForm();
-                    loginForm.Show();
+                    loginForm.ShowDialog();
 
                     this.Close();
                 }
@@ -141,17 +139,6 @@ namespace QuanLyNganHang
             }
         }
 
-        private string GetCurrentUser()
-        {
-            // TODO: Implement actual user retrieval from session/database
-            return "Nguyễn Văn A";
-        }
-
-        private string GetCurrentRole()
-        {
-            // TODO: Implement actual role retrieval from session/database
-            return "Quản trị viên";
-        }
 
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
