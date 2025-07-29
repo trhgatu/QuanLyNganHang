@@ -21,7 +21,7 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
             {
                 ClearContent();
 
-                var title = DashboardUIFactory.CreateTitle("👥 QUẢN LÝ NGƯỜI DÙNG HỆ THỐNG", ContentPanel.Width);
+                var title = DashboardUIFactory.CreateTitle("QUẢN LÝ NGƯỜI DÙNG HỆ THỐNG", ContentPanel.Width);
                 ContentPanel.Controls.Add(title);
 
                 LoadUserStatistics();

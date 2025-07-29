@@ -21,44 +21,27 @@ namespace QuanLyNganHang.DataAccess
                     if (connection.State != ConnectionState.Open)
                         connection.Open();
                     string query = @"
-                        SELECT 
-                            'TXN001' as TransactionID,
-                            'TXN001' as TransactionCode,
-                            '1234567890' as AccountNumber,
-                            'Nguyễn Văn A' as CustomerName,
-                            'Nạp tiền' as TransactionType,
-                            '5,000,000 VND' as Amount,
-                            TO_CHAR(SYSDATE, 'DD/MM/YYYY HH24:MI:SS') as TransactionDate,
-                            'Thành công' as Status,
-                            'ATM' as Channel,
-                            'Nhân viên 1' as ProcessedBy
-                        FROM DUAL
-                        UNION ALL
-                        SELECT 
-                            'TXN002' as TransactionID,
-                            'TXN002' as TransactionCode,
-                            '1234567891' as AccountNumber,
-                            'Trần Thị B' as CustomerName,
-                            'Rút tiền' as TransactionType,
-                            '2,000,000 VND' as Amount,
-                            TO_CHAR(SYSDATE-1, 'DD/MM/YYYY HH24:MI:SS') as TransactionDate,
-                            'Thành công' as Status,
-                            'Quầy' as Channel,
-                            'Nhân viên 2' as ProcessedBy
-                        FROM DUAL
-                        UNION ALL
-                        SELECT 
-                            'TXN003' as TransactionID,
-                            'TXN003' as TransactionCode,
-                            '1234567892' as AccountNumber,
-                            'Lê Văn C' as CustomerName,
-                            'Chuyển khoản' as TransactionType,
-                            '1,500,000 VND' as Amount,
-                            TO_CHAR(SYSDATE, 'DD/MM/YYYY HH24:MI:SS') as TransactionDate,
-                            'Đang xử lý' as Status,
-                            'Internet Banking' as Channel,
-                            'Nhân viên 3' as ProcessedBy
-                        FROM DUAL";
+    SELECT 
+        t.transaction_id AS TransactionID,
+        t.transaction_code AS TransactionCode,
+        a.account_number AS AccountNumber,
+        c.full_name AS CustomerName,
+        tt.type_name AS TransactionType,
+        TO_CHAR(t.amount, 'FM999G999G990') || ' VND' AS Amount,
+        TO_CHAR(t.transaction_date, 'DD/MM/YYYY HH24:MI:SS') AS TransactionDate,
+        CASE t.status
+            WHEN 0 THEN 'Thất bại'
+            WHEN 1 THEN 'Thành công'
+            WHEN 2 THEN 'Đang xử lý'
+        END AS Status,
+        t.channel AS Channel,
+        e.full_name AS ProcessedBy
+    FROM transactions t
+    JOIN accounts a ON t.account_id = a.account_id
+    JOIN customers c ON a.customer_id = c.customer_id
+    JOIN transaction_types tt ON t.transaction_type_id = tt.type_id
+    LEFT JOIN employees e ON t.processed_by = e.employee_id
+    ORDER BY t.transaction_date DESC";
 
                     using (var command = new OracleCommand(query, connection))
                     {
@@ -91,11 +74,18 @@ namespace QuanLyNganHang.DataAccess
 
                     string query = @"
                         SELECT 
-                            1456 as TodayTransactions,
-                            15800000000 as TodayDeposits,
-                            12300000000 as TodayWithdrawals,
-                            23 as PendingTransactions
-                        FROM DUAL";
+                            COUNT(*) AS TodayTransactions,
+                            NVL(SUM(CASE 
+                                WHEN tt.type_code IN ('DEPOSIT', 'INTEREST', 'REVERSAL') THEN t.amount 
+                                ELSE 0 
+                            END), 0) AS TodayDeposits,
+                            NVL(SUM(CASE 
+                                WHEN tt.type_code IN ('WITHDRAW', 'TRANSFER', 'PAYMENT', 'FEE', 'ADJUSTMENT') THEN t.amount 
+                                ELSE 0 
+                            END), 0) AS TodayWithdrawals,
+                            COUNT(CASE WHEN t.status = 2 THEN 1 END) AS PendingTransactions
+                        FROM transactions t
+                        JOIN transaction_types tt ON t.transaction_type_id = tt.type_id";
 
                     using (var command = new OracleCommand(query, connection))
                     {
@@ -114,15 +104,17 @@ namespace QuanLyNganHang.DataAccess
             }
             catch (Exception ex)
             {
-                // Fallback statistics
-                stats.TodayTransactions = 1456;
-                stats.TodayDeposits = 15800000000;
-                stats.TodayWithdrawals = 12300000000;
-                stats.PendingTransactions = 23;
+                stats.TodayTransactions = 0;
+                stats.TodayDeposits = 0;
+                stats.TodayWithdrawals = 0;
+                stats.PendingTransactions = 0;
+                System.Diagnostics.Debug.WriteLine("Lỗi thống kê giao dịch: " + ex.Message);
             }
 
             return stats;
         }
+
+
 
         private DataTable CreateFallbackTransactionData()
         {

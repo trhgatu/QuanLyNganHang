@@ -25,7 +25,7 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
             {
                 ClearContent();
 
-                var title = DashboardUIFactory.CreateTitle("💰 QUẢN LÝ GIAO DỊCH TÀI CHÍNH", ContentPanel.Width);
+                var title = DashboardUIFactory.CreateTitle("QUẢN LÝ GIAO DỊCH TÀI CHÍNH", ContentPanel.Width);
                 ContentPanel.Controls.Add(title);
 
                 LoadTransactionStatistics();

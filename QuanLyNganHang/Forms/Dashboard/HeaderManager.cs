@@ -53,7 +53,7 @@ namespace QuanLyNganHang.Forms.Dashboard
         {
             userInfoLabel = new Label
             {
-                Text = $"👋 Xin chào, {currentUser} | {currentRole}",
+                Text = $"Xin chào, {currentUser} | {currentRole}",
                 Font = new Font("Segoe UI", 10),
                 ForeColor = Color.LightBlue,
                 AutoSize = false,
