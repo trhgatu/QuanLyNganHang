@@ -1,6 +1,7 @@
 ﻿using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Data;
+using System.Windows.Forms;
 
 namespace QuanLyNganHang.DataAccess
 {
@@ -18,37 +19,32 @@ namespace QuanLyNganHang.DataAccess
                         connection.Open();
 
                     string query = @"
-                        SELECT 
-                            e.employee_id as ID,
-                            su.username as Username,
-                            e.full_name as FullName,
-                           
-                            CASE 
-                                WHEN su.status = 1 THEN 'Hoạt động'
-                                WHEN su.status = 0 THEN 'Bị khóa'
-                                ELSE 'Không xác định'
-                            END as Status,
-                            TO_CHAR(su.last_login, 'DD/MM/YYYY HH24:MI:SS') as LastLogin,
-                            e.email,
-                            e.phone,
-                            b.branch_name as Branch
-                        FROM 
-                            employees e
-                        LEFT JOIN 
-                            system_users su ON e.employee_id = su.employee_id
-                        LEFT JOIN 
-                            employee_roles er ON e.employee_id = er.employee_id
-                        LEFT JOIN 
-                            roles r ON er.role_id = r.role_id
-                        LEFT JOIN
-                            branches b ON e.branch_id = b.branch_id
-                        WHERE 
-                            su.username IS NOT NULL
-                        GROUP BY 
-                            e.employee_id, su.username, e.full_name, su.status, 
-                            su.last_login, e.email, e.phone, b.branch_name
-                        ORDER BY 
-                            e.employee_id";
+                      SELECT 
+    e.employee_id as ID,
+    su.username as Username,
+    e.full_name as FullName,
+    CASE 
+        WHEN su.username IS NULL THEN 'Chưa có tài khoản'
+        WHEN su.status = 1 THEN 'Hoạt động'
+        WHEN su.status = 0 THEN 'Bị khóa'
+        ELSE 'Không xác định'
+    END as Status,
+    -- TO_CHAR(su.last_login, 'DD/MM/YYYY HH24:MI:SS') as LastLogin, -- Nếu không cần thì bỏ
+    e.email,
+    e.phone,
+    b.branch_name as Branch,
+    e.oracle_user AS OracleUser,
+    r.role_name AS Role
+FROM employees e
+LEFT JOIN system_users su ON e.employee_id = su.employee_id
+LEFT JOIN employee_roles er ON e.employee_id = er.employee_id
+LEFT JOIN roles r ON er.role_id = r.role_id
+LEFT JOIN branches b ON e.branch_id = b.branch_id
+GROUP BY 
+    e.employee_id, su.username, e.full_name, su.status, 
+    su.last_login, e.email, e.phone, b.branch_name, e.oracle_user, r.role_name
+ORDER BY e.employee_id
+";
 
                 using (var command = new OracleCommand(query, connection))
                 using (var adapter = new OracleDataAdapter(command))
@@ -115,124 +111,136 @@ namespace QuanLyNganHang.DataAccess
             return stats;
         }
 
-        public bool CreateUser(string username, string password, int employeeId, string profileName = "DEFAULT")
+        public DataRow GetUserById(int employeeId)
         {
-            try
+            using (var conn = Database.Get_Connect())
             {
-                using (var connection = Database.Get_Connect())
+                if (conn.State != ConnectionState.Open)
+                    conn.Open();
+
+                string query = @"
+            SELECT 
+                e.full_name, e.email, e.phone, e.position,
+                e.oracle_user, e.branch_id,
+                su.username, su.password_hash,
+                er.role_id
+            FROM employees e
+            LEFT JOIN system_users su ON e.employee_id = su.employee_id
+            LEFT JOIN employee_roles er ON e.employee_id = er.employee_id
+            WHERE e.employee_id = :empId";
+
+                using (var cmd = new OracleCommand(query, conn))
                 {
-                    if (connection.State != ConnectionState.Open)
-                        connection.Open();
+                    cmd.Parameters.Add("empId", employeeId);
 
-                    using (var transaction = connection.BeginTransaction())
+                    using (var adapter = new OracleDataAdapter(cmd))
                     {
-                        try
-                        {
-                            string insertUserQuery = @"
-                                INSERT INTO system_users (user_id, username, password_hash, employee_id, status, created_date)
-                                VALUES (seq_employee_id.NEXTVAL, :username, :password_hash, :employee_id, 1, SYSDATE)";
-
-                            using (var command = new OracleCommand(insertUserQuery, connection))
-                            {
-                                command.Transaction = transaction;
-                                command.Parameters.Add(":username", username);
-                                command.Parameters.Add(":password_hash", HashPassword(password));
-                                command.Parameters.Add(":employee_id", employeeId);
-                                command.ExecuteNonQuery();
-                            }
-                            if (!string.IsNullOrEmpty(profileName))
-                            {
-                                string createOracleUserQuery = $"BEGIN pro_create_user('{username}', '{password}', '{profileName}'); END;";
-                                using (var command = new OracleCommand(createOracleUserQuery, connection))
-                                {
-                                    command.Transaction = transaction;
-                                    command.ExecuteNonQuery();
-                                }
-                            }
-
-                            transaction.Commit();
-                            return true;
-                        }
-                        catch
-                        {
-                            transaction.Rollback();
-                            throw;
-                        }
+                        DataTable dt = new DataTable();
+                        adapter.Fill(dt);
+                        if (dt.Rows.Count > 0)
+                            return dt.Rows[0];
+                        else
+                            return null;
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                throw new Exception($"Lỗi khi tạo người dùng: {ex.Message}");
-            }
         }
 
-        public DataTable GetUserPermissions(int userId)
+        public bool UpdateUserInfo(int employeeId, string username, string password, string oracleUser, string fullName, string email, string phone, string position, int branchId, int roleId)
         {
-            DataTable dt = new DataTable();
-
-            try
+            using (var conn = Database.Get_Connect())
+            using (var tran = conn.BeginTransaction())
             {
-                using (var connection = Database.Get_Connect())
+                try
                 {
-                    if (connection.State != ConnectionState.Open)
-                        connection.Open();
+                    // 1. Cập nhật bảng employees
+                    string updateEmp = @"UPDATE employees SET
+                                    full_name = :fullName,
+                                    email = :email,
+                                    phone = :phone,
+                                    position = :position,
+                                    branch_id = :branchId,
+                                    oracle_user = :oracleUser
+                                 WHERE employee_id = :employeeId";
 
-                    string query = @"
-                        SELECT 
-                            '1' as ID,
-                            'admin' as Username,
-                            'Administrator' as FullName,
-                            'Admin' as Role,
-                            'Hoạt động' as Status,
-                            TO_CHAR(SYSDATE, 'DD/MM/YYYY HH24:MI:SS') as LastLogin
-                        FROM DUAL
-                        UNION ALL
-                        SELECT 
-                            '2' as ID,
-                            'employee1' as Username,
-                            'Nhân viên 1' as FullName,
-                            'Employee' as Role,
-                            'Hoạt động' as Status,
-                            TO_CHAR(SYSDATE-1, 'DD/MM/YYYY HH24:MI:SS') as LastLogin
-                        FROM DUAL
-                        UNION ALL
-                        SELECT 
-                            '3' as ID,
-                            'manager1' as Username,
-                            'Quản lý 1' as FullName,
-                            'Manager' as Role,
-                            'Bị khóa' as Status,
-                            TO_CHAR(SYSDATE-2, 'DD/MM/YYYY HH24:MI:SS') as LastLogin
-                        FROM DUAL";
+                    var cmdEmp = new OracleCommand(updateEmp, conn);
+                    cmdEmp.Transaction = tran;
+                    cmdEmp.Parameters.Add("fullName", fullName);
+                    cmdEmp.Parameters.Add("email", email);
+                    cmdEmp.Parameters.Add("phone", phone);
+                    cmdEmp.Parameters.Add("position", position);
+                    cmdEmp.Parameters.Add("branchId", branchId);
+                    cmdEmp.Parameters.Add("oracleUser", string.IsNullOrEmpty(oracleUser) ? DBNull.Value : (object)oracleUser);
+                    cmdEmp.Parameters.Add("employeeId", employeeId);
+                    cmdEmp.ExecuteNonQuery();
 
+                    // 2. Kiểm tra user account có tồn tại không
+                    string checkUser = "SELECT COUNT(*) FROM system_users WHERE employee_id = :employeeId";
+                    var cmdCheck = new OracleCommand(checkUser, conn);
+                    cmdCheck.Transaction = tran;
+                    cmdCheck.Parameters.Add("employeeId", employeeId);
+                    int count = Convert.ToInt32(cmdCheck.ExecuteScalar());
 
-                    using (var command = new OracleCommand(query, connection))
+                    if (count > 0)
                     {
-                        command.Parameters.Add(":user_id", userId);
-                        using (var adapter = new OracleDataAdapter(command))
+                        // 3. Update system_users
+                        string updateUser = @"UPDATE system_users SET username = :username
+                                      {0}
+                                      WHERE employee_id = :employeeId";
+
+                        string passwordClause = "";
+                        if (!string.IsNullOrEmpty(password))
                         {
-                            adapter.Fill(dt);
+                            passwordClause = ", password_hash = :passwordHash";
                         }
+
+                        updateUser = string.Format(updateUser, passwordClause);
+                        var cmdUser = new OracleCommand(updateUser, conn);
+                        cmdUser.Transaction = tran;
+                        cmdUser.Parameters.Add("username", username);
+                        if (!string.IsNullOrEmpty(password))
+                            cmdUser.Parameters.Add("passwordHash", HashHelper.HashPassword(password));
+                        cmdUser.Parameters.Add("employeeId", employeeId);
+                        cmdUser.ExecuteNonQuery();
                     }
+                    else
+                    {
+                        // 4. Insert system_users
+                        string insertUser = @"INSERT INTO system_users (user_id, username, password_hash, employee_id, status, created_date)
+                                      VALUES (seq_system_user_id.NEXTVAL, :username, :passwordHash, :employeeId, 1, SYSDATE)";
+                        var cmdInsert = new OracleCommand(insertUser, conn);
+                        cmdInsert.Transaction = tran;
+                        cmdInsert.Parameters.Add("username", username);
+                        cmdInsert.Parameters.Add("passwordHash", HashHelper.HashPassword(password));
+                        cmdInsert.Parameters.Add("employeeId", employeeId);
+                        cmdInsert.ExecuteNonQuery();
+                    }
+
+                    // 5. Xóa role cũ
+                    var cmdDeleteRole = new OracleCommand("DELETE FROM employee_roles WHERE employee_id = :eid", conn);
+                    cmdDeleteRole.Transaction = tran;
+                    cmdDeleteRole.Parameters.Add("eid", employeeId);
+                    cmdDeleteRole.ExecuteNonQuery();
+
+                    // 6. Gán role mới
+                    var cmdInsertRole = new OracleCommand("INSERT INTO employee_roles (employee_id, role_id) VALUES (:eid, :rid)", conn);
+                    cmdInsertRole.Transaction = tran;
+                    cmdInsertRole.Parameters.Add("eid", employeeId);
+                    cmdInsertRole.Parameters.Add("rid", roleId);
+                    cmdInsertRole.ExecuteNonQuery();
+
+                    tran.Commit();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    tran.Rollback();
+                    MessageBox.Show("Lỗi khi cập nhật: " + ex.Message);
+                    return false;
                 }
             }
-            catch (Exception ex)
-            {
-                throw new Exception($"Lỗi khi lấy quyền người dùng: {ex.Message}");
-            }
-
-            return dt;
         }
 
-        private string HashPassword(string password)
-        {
-            using (var sha256 = System.Security.Cryptography.SHA256.Create())
-            {
-                byte[] hashedBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-                return Convert.ToBase64String(hashedBytes);
-            }
-        }
     }
 
     public class UserStatistics

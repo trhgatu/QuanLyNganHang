@@ -231,7 +231,7 @@ namespace QuanLyNganHang
                         settingsManager.SaveLoginCredentials(user);
                     }
 
-                    statusManager.ShowSuccess($"✅ Đăng nhập thành công!\nServer Version: {c.ServerVersion}");
+                    statusManager.ShowSuccess($"Đăng nhập thành công!\nServer Version: {c.ServerVersion}");
                     await Task.Delay(1500);
 
                     this.Hide();
@@ -268,7 +268,7 @@ namespace QuanLyNganHang
             btn_Login.Enabled = false;
             statusManager.ShowError("🔒 Đã vượt quá số lần thử. Vui lòng chờ 5 phút.");
 
-            Timer lockoutTimer = new Timer { Interval = 300000 }; // 5 minutes
+            Timer lockoutTimer = new Timer { Interval = 300000 };
             lockoutTimer.Tick += (s, e) =>
             {
                 loginAttempts = 0;
@@ -301,7 +301,6 @@ namespace QuanLyNganHang
             base.OnFormClosing(e);
         }
 
-        // Form dragging functionality
         protected override void OnMouseDown(MouseEventArgs e)
         {
             mouseDown = true;

@@ -1,4 +1,5 @@
 ﻿using QuanLyNganHang.DataAccess;
+using QuanLyNganHang.Forms.UserManagement;
 using System;
 using System.Data;
 using System.Drawing;
@@ -51,9 +52,8 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
         {
             var actionPanel = CreateActionPanel(new[]
             {
-                ("Thêm Admin", DashboardConstants.Colors.Danger, (Action)ShowAddAdminForm),
                 ("Profile", DashboardConstants.Colors.Info, (Action)ShowProfileForm),
-                ("Thêm Nhân viên", DashboardConstants.Colors.Success, (Action)ShowAddEmployeeForm),
+                ("Thêm người dùng", DashboardConstants.Colors.Success, (Action)ShowAddEmployeeForm),
                 ("Phân quyền", DashboardConstants.Colors.Warning, (Action)ShowPermissionForm),
                 ("Làm mới", DashboardConstants.Colors.Info, (Action)RefreshContent)
             });
@@ -110,22 +110,38 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                 dgv.Columns["FullName"].HeaderText = "Họ tên";
                 dgv.Columns["FullName"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             }
-            if (dgv.Columns["Role"] != null)
-            {
-                dgv.Columns["Role"].HeaderText = "Vai trò";
-                dgv.Columns["Role"].Width = 100;
-            }
             if (dgv.Columns["Status"] != null)
             {
                 dgv.Columns["Status"].HeaderText = "Trạng thái";
                 dgv.Columns["Status"].Width = 120;
             }
-            if (dgv.Columns["LastLogin"] != null)
+            if (dgv.Columns["Email"] != null)
             {
-                dgv.Columns["LastLogin"].HeaderText = "Đăng nhập cuối";
-                dgv.Columns["LastLogin"].Width = 150;
+                dgv.Columns["Email"].HeaderText = "Email";
+                dgv.Columns["Email"].Width = 200;
+            }
+            if (dgv.Columns["Phone"] != null)
+            {
+                dgv.Columns["Phone"].HeaderText = "Số điện thoại";
+                dgv.Columns["Phone"].Width = 130;
+            }
+            if (dgv.Columns["Branch"] != null)
+            {
+                dgv.Columns["Branch"].HeaderText = "Chi nhánh";
+                dgv.Columns["Branch"].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            }
+            if (dgv.Columns["Role"] != null)
+            {
+                dgv.Columns["Role"].HeaderText = "Vai trò";
+                dgv.Columns["Role"].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            }
+            if (dgv.Columns["OracleUser"] != null)
+            {
+                dgv.Columns["OracleUser"].HeaderText = "Oracle User";
+                dgv.Columns["OracleUser"].Width = 150;
             }
         }
+
 
         private void AddUserContextMenu(DataGridView dgv)
         {
@@ -147,17 +163,20 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
             if (dgv.SelectedRows.Count > 0)
             {
                 var selectedRow = dgv.SelectedRows[0];
-                string userId = selectedRow.Cells["ID"].Value?.ToString();
+                int employeeId = Convert.ToInt32(selectedRow.Cells["ID"].Value);
                 string username = selectedRow.Cells["Username"].Value?.ToString();
 
-                ShowMessage($"Chỉnh sửa người dùng: {username} (ID: {userId})");
-                // TODO: Implement edit user form
+                EditUserForm editForm = new EditUserForm(employeeId, username);
+                editForm.ShowDialog();
+
+                RefreshContent();
             }
             else
             {
                 ShowInfo("Vui lòng chọn một người dùng để chỉnh sửa!");
             }
         }
+
 
         private void DeleteSelectedUser(DataGridView dgv)
         {
@@ -167,11 +186,26 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                 string userId = selectedRow.Cells["ID"].Value?.ToString();
                 string username = selectedRow.Cells["Username"].Value?.ToString();
 
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    ShowInfo("Nhân viên này chưa có tài khoản hệ thống để xóa.");
+                    return;
+                }
+
                 if (ShowConfirmation($"Bạn có chắc chắn muốn xóa người dùng '{username}'?"))
                 {
-                    ShowMessage($"Xóa người dùng: {username} (ID: {userId})");
-                    // TODO: Implement delete user logic
-                    RefreshContent();
+                    var deleter = new DeleteUser();
+                    bool success = deleter.Pro_DropUserFull(username);
+
+                    if (success)
+                    {
+                        ShowInfo($"Đã xóa người dùng '{username}' thành công!");
+                        RefreshContent();
+                    }
+                    else
+                    {
+                        ShowError($"Xóa người dùng '{username}' thất bại!");
+                    }
                 }
             }
             else
@@ -180,9 +214,21 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
             }
         }
 
+
         // Action methods
-        private void ShowAddAdminForm() => ShowMessage("Thêm Admin");
-        private void ShowAddEmployeeForm() => ShowMessage("Thêm Nhân viên");
+        private void ShowAddEmployeeForm()
+        {
+            try
+            {
+                CreateUserForm createUserForm = new CreateUserForm();
+                createUserForm.ShowDialog();
+                RefreshContent();
+            }
+            catch (Exception ex)
+            {
+                ShowError($"Lỗi khi mở form tạo user: {ex.Message}");
+            }
+        }
         private void ShowPermissionForm() => ShowMessage("Phân quyền");
 
         private void ShowProfileForm()

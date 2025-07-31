@@ -84,8 +84,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Core\Helpers\HashHelper.cs" />
     <Compile Include="Core\SessionContext.cs" />
     <Compile Include="DataAccess\AuditLogDataAccess.cs" />
+    <Compile Include="DataAccess\BranchDataAccess.cs" />
+    <Compile Include="DataAccess\Prod\CreateUser.cs" />
+    <Compile Include="DataAccess\Prod\DeleteUser.cs" />
     <Compile Include="DataAccess\EmployeeDataAccess.cs" />
     <Compile Include="DataAccess\PermissionDataAccess.cs" />
     <Compile Include="DataAccess\ReportsDataAccess.cs" />
@@ -134,6 +138,15 @@
     <Compile Include="Forms\Profile\ProfileForm.Designer.cs">
       <DependentUpon>ProfileForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\UserManagement\CreateUserForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\UserManagement\CreateUserForm.Designer.cs">
+      <DependentUpon>CreateUserForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\UserManagement\EditUserForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Profile.cs" />
     <Compile Include="Profile_GUI.cs">
       <SubType>Form</SubType>
@@ -145,6 +158,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Forms\Login\LoginForm.resx">
       <DependentUpon>LoginForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\UserManagement\CreateUserForm.resx">
+      <DependentUpon>CreateUserForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\UserManagement\EditUserForm.resx">
+      <DependentUpon>EditUserForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Profile_GUI.resx">
       <DependentUpon>Profile_GUI.cs</DependentUpon>

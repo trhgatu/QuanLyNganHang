@@ -1,12 +1,6 @@
-﻿using QuanLyNganHang.DataAccess;
-using QuanLyNganHang.Forms.Dashboard.Content;
+﻿using QuanLyNganHang.Forms.Dashboard.Content;
 using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace QuanLyNganHang.Forms.Dashboard
@@ -36,10 +30,7 @@ namespace QuanLyNganHang.Forms.Dashboard
         {
             try
             {
-                // Create appropriate content based on type
                 currentContent = ContentFactory.CreateContent(contentType, contentPanel);
-
-                // Load the content
                 currentContent.LoadContent();
             }
             catch (Exception ex)
