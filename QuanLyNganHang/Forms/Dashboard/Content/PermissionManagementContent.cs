@@ -20,7 +20,7 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
             {
                 ClearContent();
 
-                var title = DashboardUIFactory.CreateTitle("🔐 PHÂN QUYỀN & KIỂM SOÁT", ContentPanel.Width);
+                var title = DashboardUIFactory.CreateTitle("PHÂN QUYỀN KIỂM SOÁT", ContentPanel.Width);
                 ContentPanel.Controls.Add(title);
 
                 CreateSimpleTabControl();
@@ -39,8 +39,6 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                 Size = new Size(ContentPanel.Width - 40, ContentPanel.Height - 100),
                 Font = new Font("Segoe UI", 10)
             };
-
-            // Chỉ 5 tab theo yêu cầu đề bài
             tabControl.TabPages.Add(CreateDACTab());
             tabControl.TabPages.Add(CreateMACTab());
             tabControl.TabPages.Add(CreateRBACTab());
@@ -60,7 +58,22 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                 Size = new Size(400, 100),
                 Font = new Font("Segoe UI", 11)
             };
-            tab.Controls.Add(info);
+            Button btnOpenAuthorizationForm = new Button
+            {
+                Text = "Mở Form Phân Quyền Oracle",
+                Location = new Point(20, 140),
+                Size = new Size(250, 40),
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                BackColor = Color.LightSteelBlue
+            };
+            btnOpenAuthorizationForm.Click += (s, e) =>
+            {
+                var form = new AuthorizationForm();
+                form.ShowDialog();
+            };
+
+            tab.Controls.Add(btnOpenAuthorizationForm);
+
             return tab;
         }
 

@@ -8,7 +8,6 @@ namespace QuanLyNganHang.Forms.UserManagement
 {
     public partial class CreateUserForm : Form
     {
-        OracleConnection conn;
         Create_User u;
         EmployeeDataAccess employeeDataAccess;
         RoleDataAccess roleDataAccess;

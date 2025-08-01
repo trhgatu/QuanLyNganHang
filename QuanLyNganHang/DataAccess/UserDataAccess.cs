@@ -174,7 +174,6 @@ ORDER BY e.employee_id
                     cmdEmp.Parameters.Add("employeeId", employeeId);
                     cmdEmp.ExecuteNonQuery();
 
-                    // 2. Kiểm tra user account có tồn tại không
                     string checkUser = "SELECT COUNT(*) FROM system_users WHERE employee_id = :employeeId";
                     var cmdCheck = new OracleCommand(checkUser, conn);
                     cmdCheck.Transaction = tran;
@@ -183,7 +182,6 @@ ORDER BY e.employee_id
 
                     if (count > 0)
                     {
-                        // 3. Update system_users
                         string updateUser = @"UPDATE system_users SET username = :username
                                       {0}
                                       WHERE employee_id = :employeeId";

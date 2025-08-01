@@ -289,9 +289,25 @@ namespace QuanLyNganHang.Forms.UserManagement
             cb_role.DisplayMember = "role_name";
             cb_role.ValueMember = "role_id";
 
-            cb_role.SelectedValue = Convert.ToInt32(row["role_id"]);
-            cb_branch.SelectedValue = Convert.ToInt32(row["branch_id"]);
+            if (row["role_id"] != DBNull.Value)
+            {
+                cb_role.SelectedValue = Convert.ToInt32(row["role_id"]);
+            }
+            else
+            {
+                cb_role.SelectedIndex = -1;
+            }
+
+            if (row["branch_id"] != DBNull.Value)
+            {
+                cb_branch.SelectedValue = Convert.ToInt32(row["branch_id"]);
+            }
+            else
+            {
+                cb_branch.SelectedIndex = -1;
+            }
         }
+
         private void LoadUserInfo()
         {
             var row = userDataAccess.GetUserById(_employeeId);

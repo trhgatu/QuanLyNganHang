@@ -1,16 +1,13 @@
 ﻿using Oracle.ManagedDataAccess.Client;
 using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace QuanLyNganHang.DataAccess
 {
     public class DeleteUser
     {
-        public bool Pro_DropUserFull(string username)
+        public bool Pro_DropUserById(int employeeId)
         {
             try
             {
@@ -22,11 +19,11 @@ namespace QuanLyNganHang.DataAccess
                     OracleCommand cmd = new OracleCommand
                     {
                         Connection = conn,
-                        CommandText = "pro_drop_user_full",
+                        CommandText = "pro_drop_user_by_id",
                         CommandType = CommandType.StoredProcedure
                     };
 
-                    cmd.Parameters.Add("p_username", OracleDbType.Varchar2).Value = username.ToUpper();
+                    cmd.Parameters.Add("p_employee_id", OracleDbType.Int32).Value = employeeId;
 
                     cmd.ExecuteNonQuery();
                     return true;
@@ -34,7 +31,7 @@ namespace QuanLyNganHang.DataAccess
             }
             catch (Exception ex)
             {
-                System.Windows.Forms.MessageBox.Show("Lỗi khi xóa user Oracle:\n" + ex.Message);
+                System.Windows.Forms.MessageBox.Show("Lỗi khi xóa người dùng theo ID:\n" + ex.Message);
                 return false;
             }
         }

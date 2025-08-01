@@ -36,6 +36,7 @@ namespace QuanLyNganHang.Forms.Dashboard
                 new { Text = "🏦 Quản lý Tài khoản", Key = "AccountManagement" },
                 new { Text = "💰 Quản lý Giao dịch", Key = "TransactionManagement" },
                 new { Text = "🔐 Phân quyền", Key = "PermissionManagement" },
+                new { Text = "🔐 Quản lý tài khoản Oracle", Key = "OracleAccountManagement" },
                 new { Text = "📋 Nhật ký Audit", Key = "AuditLog" },
                 new { Text = "📊 Báo cáo", Key = "Reports" },
                 new { Text = "⚙️ Cài đặt", Key = "Settings" }

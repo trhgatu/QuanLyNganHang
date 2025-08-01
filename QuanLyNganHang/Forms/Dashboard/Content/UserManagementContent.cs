@@ -183,28 +183,28 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
             if (dgv.SelectedRows.Count > 0)
             {
                 var selectedRow = dgv.SelectedRows[0];
-                string userId = selectedRow.Cells["ID"].Value?.ToString();
+                string userIdStr = selectedRow.Cells["ID"].Value?.ToString();
                 string username = selectedRow.Cells["Username"].Value?.ToString();
 
-                if (string.IsNullOrWhiteSpace(username))
+                if (!int.TryParse(userIdStr, out int employeeId))
                 {
-                    ShowInfo("Nhân viên này chưa có tài khoản hệ thống để xóa.");
+                    ShowError("Không thể lấy được ID nhân viên.");
                     return;
                 }
 
-                if (ShowConfirmation($"Bạn có chắc chắn muốn xóa người dùng '{username}'?"))
+                if (ShowConfirmation($"Bạn có chắc chắn muốn xóa nhân viên {(string.IsNullOrWhiteSpace(username) ? "[Chưa có tài khoản]" : $"'{username}'")} không?"))
                 {
                     var deleter = new DeleteUser();
-                    bool success = deleter.Pro_DropUserFull(username);
+                    bool success = deleter.Pro_DropUserById(employeeId);
 
                     if (success)
                     {
-                        ShowInfo($"Đã xóa người dùng '{username}' thành công!");
+                        ShowInfo("Đã xóa nhân viên thành công!");
                         RefreshContent();
                     }
                     else
                     {
-                        ShowError($"Xóa người dùng '{username}' thất bại!");
+                        ShowError("Xóa nhân viên thất bại!");
                     }
                 }
             }
@@ -213,6 +213,7 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                 ShowInfo("Vui lòng chọn một người dùng để xóa!");
             }
         }
+
 
 
         // Action methods
