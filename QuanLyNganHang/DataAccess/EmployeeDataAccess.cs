@@ -12,10 +12,10 @@ namespace QuanLyNganHang.DataAccess
             {
                 string query = @"
                 SELECT e.full_name, r.role_name, e.employee_id, e.position, b.branch_id, b.branch_name
-                FROM employees e
-                JOIN employee_roles er ON e.employee_id = er.employee_id
-                JOIN roles r ON r.role_id = er.role_id
-                JOIN branches b ON e.branch_id = b.branch_id
+                FROM ADMIN_NGANHANG.employees e
+                JOIN ADMIN_NGANHANG.employee_roles er ON e.employee_id = er.employee_id
+                JOIN ADMIN_NGANHANG.roles r ON r.role_id = er.role_id
+                JOIN ADMIN_NGANHANG.branches b ON e.branch_id = b.branch_id
                 WHERE UPPER(e.oracle_user) = SYS_CONTEXT('USERENV', 'SESSION_USER')";
 
                 using (var cmd = new OracleCommand(query, conn))
@@ -39,7 +39,7 @@ namespace QuanLyNganHang.DataAccess
         }
         public static bool UsernameExists(string username, OracleConnection conn)
         {
-            string query = "SELECT COUNT(*) FROM system_users WHERE UPPER(username) = :username";
+            string query = "SELECT COUNT(*) FROM ADMIN_NGANHANG.system_users WHERE UPPER(username) = :username";
             using (var cmd = new OracleCommand(query, conn))
             {
                 cmd.Parameters.Add("username", username.ToUpper());
@@ -60,7 +60,7 @@ namespace QuanLyNganHang.DataAccess
 
                         string empCode = "EMP" + employeeId.ToString().PadLeft(4, '0');
                         string insertEmp = @"
-                    INSERT INTO employees (
+                    INSERT INTO ADMIN_NGANHANG.employees (
                         employee_id, employee_code, full_name, email, phone, address, position, branch_id, hire_date, salary, status, created_date, oracle_user
                     ) VALUES (
                         :id, :code, :name, :email, :phone, :addr, :pos, :branchId, SYSDATE, 0, 1, SYSDATE, :oracleUser
@@ -79,7 +79,7 @@ namespace QuanLyNganHang.DataAccess
                         cmdInsertEmp.Parameters.Add("oracleUser", username);
                         cmdInsertEmp.ExecuteNonQuery();
                         string insertUser = @"
-                    INSERT INTO system_users (
+                    INSERT INTO ADMIN_NGANHANG.system_users (
                         user_id, username, password_hash, employee_id, status, created_date
                     ) VALUES (
                         seq_system_user_id.NEXTVAL, :username, :password_hash, :employee_id, 1, SYSDATE
@@ -92,7 +92,7 @@ namespace QuanLyNganHang.DataAccess
                         cmdInsertUser.Parameters.Add("employee_id", employeeId);
                         cmdInsertUser.ExecuteNonQuery();
 
-                        string assignRole = "INSERT INTO employee_roles (employee_id, role_id) VALUES (:eid, :rid)";
+                        string assignRole = "INSERT INTO ADMIN_NGANHANG.employee_roles (employee_id, role_id) VALUES (:eid, :rid)";
                         var cmdAssignRole = new OracleCommand(assignRole, conn);
                         cmdAssignRole.Transaction = tran;
                         cmdAssignRole.Parameters.Add("eid", employeeId);

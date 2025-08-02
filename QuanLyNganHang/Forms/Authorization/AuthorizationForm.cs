@@ -585,6 +585,30 @@ namespace QuanLyNganHang.Forms
                     MessageBox.Show("Đã thu hồi quyền CREATE SESSION thành công.");
             }
         }
+        private void btn_Grant_All_Tables_Click(object sender, EventArgs e)
+        {
+            string username = cmb_username.SelectedItem?.ToString();
+
+            if (string.IsNullOrEmpty(username))
+            {
+                MessageBox.Show("Vui lòng chọn User để gán quyền.");
+                return;
+            }
+
+            var result = MessageBox.Show($"Bạn có chắc muốn cấp toàn bộ quyền bảng cho user '{username}'?",
+                                         "Xác nhận", MessageBoxButtons.YesNo);
+
+            if (result == DialogResult.Yes)
+            {
+                bool success = _authService.GrantAllTables(username);
+
+                if (success)
+                    MessageBox.Show("Đã cấp quyền thành công!");
+                else
+                    MessageBox.Show("Cấp quyền thất bại!");
+            }
+        }
+
 
     }
 }

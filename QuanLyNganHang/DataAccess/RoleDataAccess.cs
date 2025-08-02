@@ -14,7 +14,8 @@ namespace QuanLyNganHang.DataAccess
             if (connection.State != ConnectionState.Open)
                 connection.Open();
 
-            string query = "SELECT role_id, role_name FROM roles WHERE status = 1";
+            string query = "SELECT role_id, role_name FROM ADMIN_NGANHANG.roles WHERE status = 1";
+
             using (OracleCommand cmd = new OracleCommand(query, connection))
             {
                 using (OracleDataAdapter adapter = new OracleDataAdapter(cmd))
@@ -32,7 +33,7 @@ namespace QuanLyNganHang.DataAccess
 
             if (connection.State != ConnectionState.Open)
                 connection.Open();
-            string query = "INSERT INTO employee_roles (employee_id, role_id) VALUES (:employeeId, :roleId)";
+            string query = "INSERT INTO ADMIN_NGANHANG.employee_roles (employee_id, role_id) VALUES (:employeeId, :roleId)";
             using (OracleCommand cmd = new OracleCommand(query, connection))
             {
                 cmd.Parameters.Add(new OracleParameter("employeeId", employeeId));

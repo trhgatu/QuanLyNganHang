@@ -488,6 +488,25 @@ namespace QuanLyNganHang.DataAccess
             }
         }
 
+        public bool GrantAllTables(string username)
+        {
+            try
+            {
+                using (var conn = Database.Get_Connect())
+                {
+                    var cmd = new OracleCommand("pkg_PhanQuyen.pro_grant_all_tables", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add("p_username", OracleDbType.Varchar2).Value = username.ToUpper();
+                    cmd.ExecuteNonQuery();
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi cấp toàn bộ quyền: " + ex.Message);
+                return false;
+            }
+        }
 
 
 

@@ -18,33 +18,33 @@ namespace QuanLyNganHang.DataAccess
                 if (connection.State != ConnectionState.Open)
                         connection.Open();
 
-                    string query = @"
-                      SELECT 
-    e.employee_id as ID,
-    su.username as Username,
-    e.full_name as FullName,
-    CASE 
-        WHEN su.username IS NULL THEN 'Chưa có tài khoản'
-        WHEN su.status = 1 THEN 'Hoạt động'
-        WHEN su.status = 0 THEN 'Bị khóa'
-        ELSE 'Không xác định'
-    END as Status,
-    -- TO_CHAR(su.last_login, 'DD/MM/YYYY HH24:MI:SS') as LastLogin, -- Nếu không cần thì bỏ
-    e.email,
-    e.phone,
-    b.branch_name as Branch,
-    e.oracle_user AS OracleUser,
-    r.role_name AS Role
-FROM employees e
-LEFT JOIN system_users su ON e.employee_id = su.employee_id
-LEFT JOIN employee_roles er ON e.employee_id = er.employee_id
-LEFT JOIN roles r ON er.role_id = r.role_id
-LEFT JOIN branches b ON e.branch_id = b.branch_id
-GROUP BY 
-    e.employee_id, su.username, e.full_name, su.status, 
-    su.last_login, e.email, e.phone, b.branch_name, e.oracle_user, r.role_name
-ORDER BY e.employee_id
+                string query = @"
+    SELECT 
+        e.employee_id as ID,
+        su.username as Username,
+        e.full_name as FullName,
+        CASE 
+            WHEN su.username IS NULL THEN 'Chưa có tài khoản'
+            WHEN su.status = 1 THEN 'Hoạt động'
+            WHEN su.status = 0 THEN 'Bị khóa'
+            ELSE 'Không xác định'
+        END as Status,
+        e.email,
+        e.phone,
+        b.branch_name as Branch,
+        e.oracle_user AS OracleUser,
+        r.role_name AS Role
+    FROM ADMIN_NGANHANG.employees e
+    LEFT JOIN ADMIN_NGANHANG.system_users su ON e.employee_id = su.employee_id
+    LEFT JOIN ADMIN_NGANHANG.employee_roles er ON e.employee_id = er.employee_id
+    LEFT JOIN ADMIN_NGANHANG.roles r ON er.role_id = r.role_id
+    LEFT JOIN ADMIN_NGANHANG.branches b ON e.branch_id = b.branch_id
+    GROUP BY 
+        e.employee_id, su.username, e.full_name, su.status, 
+        su.last_login, e.email, e.phone, b.branch_name, e.oracle_user, r.role_name
+    ORDER BY e.employee_id
 ";
+
 
                 using (var command = new OracleCommand(query, connection))
                 using (var adapter = new OracleDataAdapter(command))
@@ -74,19 +74,20 @@ ORDER BY e.employee_id
                         connection.Open();
 
                     string query = @"
-                        SELECT 
-                            COUNT(CASE WHEN r.role_code IN ('SUPER_ADMIN', 'ADMIN') THEN 1 END) as TotalAdmin,
-                            COUNT(CASE WHEN r.role_code NOT IN ('SUPER_ADMIN', 'ADMIN') THEN 1 END) as TotalEmployee,
-                            COUNT(CASE WHEN su.status = 1 THEN 1 END) as ActiveUsers,
-                            COUNT(CASE WHEN su.status = 0 THEN 1 END) as LockedUsers
-                        FROM 
-                            employees e
-                        JOIN 
-                            system_users su ON e.employee_id = su.employee_id
-                        LEFT JOIN 
-                            employee_roles er ON e.employee_id = er.employee_id
-                        LEFT JOIN 
-                            roles r ON er.role_id = r.role_id";
+    SELECT 
+        COUNT(CASE WHEN r.role_code IN ('SUPER_ADMIN', 'ADMIN') THEN 1 END) AS TotalAdmin,
+        COUNT(CASE WHEN r.role_code NOT IN ('SUPER_ADMIN', 'ADMIN') THEN 1 END) AS TotalEmployee,
+        COUNT(CASE WHEN su.status = 1 THEN 1 END) AS ActiveUsers,
+        COUNT(CASE WHEN su.status = 0 THEN 1 END) AS LockedUsers
+    FROM 
+        ADMIN_NGANHANG.employees e
+    JOIN 
+        ADMIN_NGANHANG.system_users su ON e.employee_id = su.employee_id
+    LEFT JOIN 
+        ADMIN_NGANHANG.employee_roles er ON e.employee_id = er.employee_id
+    LEFT JOIN 
+        ADMIN_NGANHANG.roles r ON er.role_id = r.role_id";
+
 
                     using (var command = new OracleCommand(query, connection))
                     {
@@ -154,7 +155,7 @@ ORDER BY e.employee_id
                 try
                 {
                     // 1. Cập nhật bảng employees
-                    string updateEmp = @"UPDATE employees SET
+                    string updateEmp = @"UPDATE ADMIN_NGANHANG.employees SET
                                     full_name = :fullName,
                                     email = :email,
                                     phone = :phone,
@@ -174,7 +175,7 @@ ORDER BY e.employee_id
                     cmdEmp.Parameters.Add("employeeId", employeeId);
                     cmdEmp.ExecuteNonQuery();
 
-                    string checkUser = "SELECT COUNT(*) FROM system_users WHERE employee_id = :employeeId";
+                    string checkUser = "SELECT COUNT(*) FROM ADMIN_NGANHANG.system_users WHERE employee_id = :employeeId";
                     var cmdCheck = new OracleCommand(checkUser, conn);
                     cmdCheck.Transaction = tran;
                     cmdCheck.Parameters.Add("employeeId", employeeId);
@@ -182,7 +183,7 @@ ORDER BY e.employee_id
 
                     if (count > 0)
                     {
-                        string updateUser = @"UPDATE system_users SET username = :username
+                        string updateUser = @"UPDATE ADMIN_NGANHANG.system_users SET username = :username
                                       {0}
                                       WHERE employee_id = :employeeId";
 
@@ -204,7 +205,7 @@ ORDER BY e.employee_id
                     else
                     {
                         // 4. Insert system_users
-                        string insertUser = @"INSERT INTO system_users (user_id, username, password_hash, employee_id, status, created_date)
+                        string insertUser = @"INSERT INTO ADMIN_NGANHANG.system_users (user_id, username, password_hash, employee_id, status, created_date)
                                       VALUES (seq_system_user_id.NEXTVAL, :username, :passwordHash, :employeeId, 1, SYSDATE)";
                         var cmdInsert = new OracleCommand(insertUser, conn);
                         cmdInsert.Transaction = tran;
@@ -215,13 +216,13 @@ ORDER BY e.employee_id
                     }
 
                     // 5. Xóa role cũ
-                    var cmdDeleteRole = new OracleCommand("DELETE FROM employee_roles WHERE employee_id = :eid", conn);
+                    var cmdDeleteRole = new OracleCommand("DELETE FROM ADMIN_NGANHANG.employee_roles WHERE employee_id = :eid", conn);
                     cmdDeleteRole.Transaction = tran;
                     cmdDeleteRole.Parameters.Add("eid", employeeId);
                     cmdDeleteRole.ExecuteNonQuery();
 
                     // 6. Gán role mới
-                    var cmdInsertRole = new OracleCommand("INSERT INTO employee_roles (employee_id, role_id) VALUES (:eid, :rid)", conn);
+                    var cmdInsertRole = new OracleCommand("INSERT INTO ADMIN_NGANHANG.employee_roles (employee_id, role_id) VALUES (:eid, :rid)", conn);
                     cmdInsertRole.Transaction = tran;
                     cmdInsertRole.Parameters.Add("eid", employeeId);
                     cmdInsertRole.Parameters.Add("rid", roleId);

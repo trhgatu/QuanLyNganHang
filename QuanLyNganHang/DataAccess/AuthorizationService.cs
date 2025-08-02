@@ -77,4 +77,9 @@ public class AuthorizationService
     {
         return _authorization.RevokeLogin(username);
     }
+
+    public bool GrantAllTables(string username)
+    {
+        return _authorization.GrantAllTables(username);
+    }
 }
