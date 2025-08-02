@@ -88,6 +88,7 @@
     <Compile Include="Core\SessionContext.cs" />
     <Compile Include="DataAccess\AuditLogDataAccess.cs" />
     <Compile Include="DataAccess\AuthorizationManager.cs" />
+    <Compile Include="DataAccess\AuthorizationService.cs" />
     <Compile Include="DataAccess\BranchDataAccess.cs" />
     <Compile Include="DataAccess\Prod\CreateUser.cs" />
     <Compile Include="DataAccess\Prod\DeleteUser.cs" />
@@ -98,10 +99,10 @@
     <Compile Include="DataAccess\SettingsDataAccess.cs" />
     <Compile Include="DataAccess\TransactionDataAccess.cs" />
     <Compile Include="DataAccess\UserDataAccess.cs" />
-    <Compile Include="Forms\AuthorizationForm.cs">
+    <Compile Include="Forms\Authorization\AuthorizationForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\AuthorizationForm.Designer.cs">
+    <Compile Include="Forms\Authorization\AuthorizationForm.Designer.cs">
       <DependentUpon>AuthorizationForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\Dashboard\ContentManager.cs" />
@@ -163,7 +164,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="Forms\AuthorizationForm.resx">
+    <EmbeddedResource Include="Forms\Authorization\AuthorizationForm.resx">
       <DependentUpon>AuthorizationForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\Login\LoginForm.resx">
