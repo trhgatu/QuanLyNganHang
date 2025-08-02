@@ -375,57 +375,28 @@ namespace QuanLyNganHang.DataAccess
                 {
                     string procedure = "pkg_PhanQuyen.pro_grant_revoke";
 
-                    OracleCommand cmd = new OracleCommand();
-                    cmd.Connection = conn;
-                    cmd.CommandText = procedure;
+                    OracleCommand cmd = new OracleCommand(procedure, conn);
                     cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.BindByName = true; 
 
-                    OracleParameter UserName = new OracleParameter();
-                    UserName.ParameterName = "username";
-                    UserName.OracleDbType = OracleDbType.Varchar2;
-                    UserName.Value = username.ToUpper();
-                    UserName.Direction = ParameterDirection.Input;
-                    cmd.Parameters.Add(UserName);
-
-                    OracleParameter UserSchema = new OracleParameter();
-                    UserSchema.ParameterName = "userschema";
-                    UserSchema.OracleDbType = OracleDbType.Varchar2;
-                    UserSchema.Value = user_schema.ToUpper();
-                    UserSchema.Direction = ParameterDirection.Input;
-                    cmd.Parameters.Add(UserSchema);
-
-                    OracleParameter ProTab = new OracleParameter();
-                    ProTab.ParameterName = "tablename";
-                    ProTab.OracleDbType = OracleDbType.Varchar2;
-                    ProTab.Value = pro_tab.ToUpper();
-                    ProTab.Direction = ParameterDirection.Input;
-                    cmd.Parameters.Add(ProTab);
-
-                    OracleParameter TypePro = new OracleParameter();
-                    TypePro.ParameterName = "typepro";
-                    TypePro.OracleDbType = OracleDbType.Varchar2;
-                    TypePro.Value = type_pro.ToUpper();
-                    TypePro.Direction = ParameterDirection.Input;
-                    cmd.Parameters.Add(TypePro);
-
-                    OracleParameter DK = new OracleParameter();
-                    DK.ParameterName = "dk";
-                    DK.OracleDbType = OracleDbType.Int16;
-                    DK.Value = dk;
-                    DK.Direction = ParameterDirection.Input;
-                    cmd.Parameters.Add(DK);
+                    cmd.Parameters.Add("username", OracleDbType.Varchar2).Value = username.ToUpper();
+                    cmd.Parameters.Add("schema_user", OracleDbType.Varchar2).Value = user_schema.ToUpper();
+                    cmd.Parameters.Add("pro_tab", OracleDbType.Varchar2).Value = pro_tab.ToUpper();
+                    cmd.Parameters.Add("type_pro", OracleDbType.Varchar2).Value = type_pro.ToUpper();
+                    cmd.Parameters.Add("dk", OracleDbType.Int16).Value = dk;
 
                     cmd.ExecuteNonQuery();
                 }
 
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                MessageBox.Show("Lỗi gọi thủ tục: pro_grant_revoke");
+                MessageBox.Show("Lỗi gọi thủ tục: pro_grant_revoke\n" + ex.Message);
                 return false;
             }
         }
+
         public bool Grant_Revoke_Role(string username, string role, int dk)
         {
             try
@@ -447,7 +418,7 @@ namespace QuanLyNganHang.DataAccess
                     cmd.Parameters.Add(UserName);
 
                     OracleParameter Role = new OracleParameter();
-                    Role.ParameterName = "userschema";
+                    Role.ParameterName = "roles";
                     Role.OracleDbType = OracleDbType.Varchar2;
                     Role.Value = role.ToUpper();
                     Role.Direction = ParameterDirection.Input;
@@ -471,6 +442,53 @@ namespace QuanLyNganHang.DataAccess
                 return false;
             }
         }
+
+        public bool GrantLogin(string username)
+        {
+            try
+            {
+                using (var conn = Database.Get_Connect())
+                using (var cmd = new OracleCommand("pkg_PhanQuyen.pro_grant_login", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.BindByName = true;
+
+                    cmd.Parameters.Add("username", OracleDbType.Varchar2).Value = username.ToUpper();
+                    cmd.ExecuteNonQuery();
+
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi gán quyền login: " + ex.Message);
+                return false;
+            }
+        }
+        public bool RevokeLogin(string username)
+        {
+            try
+            {
+                using (var conn = Database.Get_Connect())
+                using (var cmd = new OracleCommand("pkg_PhanQuyen.pro_revoke_login", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.BindByName = true;
+
+                    cmd.Parameters.Add("username", OracleDbType.Varchar2).Value = username.ToUpper();
+                    cmd.ExecuteNonQuery();
+
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi thu hồi quyền đăng nhập: " + ex.Message);
+                return false;
+            }
+        }
+
+
 
 
 

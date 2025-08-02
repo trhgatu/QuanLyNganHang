@@ -307,6 +307,25 @@ namespace QuanLyNganHang.Forms
             this.cmb_username.Size = new System.Drawing.Size(190, 24);
             this.cmb_username.TabIndex = 19;
 
+            this.btn_Grant_Login = new System.Windows.Forms.Button();
+            this.btn_Grant_Login.Location = new System.Drawing.Point(260, 20);
+            this.btn_Grant_Login.Name = "btn_Grant_Login";
+            this.btn_Grant_Login.Size = new System.Drawing.Size(120, 28);
+            this.btn_Grant_Login.Text = "Cấp quyền login";
+            this.btn_Grant_Login.UseVisualStyleBackColor = true;
+            this.btn_Grant_Login.TabIndex = 30;
+            this.panel3.Controls.Add(this.btn_Grant_Login);
+
+            this.btn_Revoke_Login = new System.Windows.Forms.Button();
+            this.btn_Revoke_Login.Location = new System.Drawing.Point(390, 20);
+            this.btn_Revoke_Login.Name = "btn_Revoke_Login";
+            this.btn_Revoke_Login.Size = new System.Drawing.Size(140, 28);
+            this.btn_Revoke_Login.Text = "Thu hồi quyền login";
+            this.btn_Revoke_Login.UseVisualStyleBackColor = true;
+            this.btn_Revoke_Login.TabIndex = 31;
+            this.panel3.Controls.Add(this.btn_Revoke_Login);
+
+
             this.lbl_table_user.AutoSize = true;
             this.lbl_table_user.Location = new System.Drawing.Point(15, 60);
             this.lbl_table_user.Name = "lbl_table_user";
@@ -484,6 +503,10 @@ namespace QuanLyNganHang.Forms
 
             // Đăng ký event Click cho Button Grant/Revoke Role
             btn_Grant_Revoke_Role.Click += btn_Grant_Revoke_Role_Click;
+            // Đăng ký event Click cho Button Grant Login
+            btn_Grant_Login.Click += btn_Grant_Login_Click;
+            // Đăng ký event Click cho Button Revoke Login
+            btn_Revoke_Login.Click += btn_Revoke_Login_Click;
         }
 
 
@@ -529,5 +552,7 @@ namespace QuanLyNganHang.Forms
         private System.Windows.Forms.ComboBox cmb_username;
         private System.Windows.Forms.Label lbl_table_user;
         private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Button btn_Grant_Login;
+        private System.Windows.Forms.Button btn_Revoke_Login;
     }
 }

@@ -194,8 +194,6 @@ namespace QuanLyNganHang.Forms
 
             return dt.AsEnumerable().Any(r => r[0].ToString().ToUpper() == "EXECUTE");
         }
-
-        // Hàm chung cho cấp / thu hồi quyền Execute Procedure/Function/Package
         private bool GrantRevokeExecute(string principal, string schema, string proTab, string objectType, bool grant)
         {
             if (string.IsNullOrEmpty(proTab))
@@ -245,7 +243,8 @@ namespace QuanLyNganHang.Forms
             if (res != DialogResult.Yes)
                 return false;
 
-            bool result = _authService.GrantRevokePro(principal, schema, table, "TABLE", grant ? 1 : 0);
+            bool result = _authService.GrantRevokePro(principal, schema, table, privilege.ToUpper(), grant ? 1 : 0);
+
 
             if (result)
                 MessageBox.Show($"{(grant ? "Gán" : "Thu hồi")} quyền thành công.");
@@ -410,131 +409,132 @@ namespace QuanLyNganHang.Forms
 
         private void cb_user_pro_Click(object sender, EventArgs e)
         {
-            bool check = cb_user_pro.Checked;
-            if (!GrantRevokeExecute(cmb_username.SelectedItem.ToString(), cmb_user.SelectedItem.ToString(), cmb_procedure.SelectedItem.ToString(), "Procedure", check))
-                cb_user_pro.Checked = !check;
-            else
-                LoadGrantUser(cmb_username.SelectedItem.ToString());
+            HandleCheckboxClick(cb_user_pro, () =>
+                GrantRevokeExecute(cmb_username.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_procedure.SelectedItem?.ToString(), "Procedure", cb_user_pro.Checked),
+                () => LoadGrantUser(cmb_username.SelectedItem?.ToString()));
         }
 
         private void cb_roles_pro_Click(object sender, EventArgs e)
         {
-            bool check = cb_roles_pro.Checked;
-            if (!GrantRevokeExecute(cmb_roles.SelectedItem.ToString(), cmb_user.SelectedItem.ToString(), cmb_procedure.SelectedItem.ToString(), "Procedure", check))
-                cb_roles_pro.Checked = !check;
-            else
-                LoadGrantRoles(cmb_roles.SelectedItem.ToString());
+            HandleCheckboxClick(cb_roles_pro, () =>
+                GrantRevokeExecute(cmb_roles.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_procedure.SelectedItem?.ToString(), "Procedure", cb_roles_pro.Checked),
+                () => LoadGrantRoles(cmb_roles.SelectedItem?.ToString()));
         }
 
         private void cb_user_fun_Click(object sender, EventArgs e)
         {
-            bool check = cb_user_fun.Checked;
-            if (!GrantRevokeExecute(cmb_username.SelectedItem.ToString(), cmb_user.SelectedItem.ToString(), cmb_function.SelectedItem.ToString(), "Function", check))
-                cb_user_fun.Checked = !check;
-            else
-                LoadGrantUser(cmb_username.SelectedItem.ToString());
+            HandleCheckboxClick(cb_user_fun, () =>
+                GrantRevokeExecute(cmb_username.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_function.SelectedItem?.ToString(), "Function", cb_user_fun.Checked),
+                () => LoadGrantUser(cmb_username.SelectedItem?.ToString()));
         }
+
 
         private void cb_roles_fun_Click(object sender, EventArgs e)
         {
-            bool check = cb_roles_fun.Checked;
-            if (!GrantRevokeExecute(cmb_roles.SelectedItem.ToString(), cmb_user.SelectedItem.ToString(), cmb_function.SelectedItem.ToString(), "Function", check))
-                cb_roles_fun.Checked = !check;
-            else
-                LoadGrantRoles(cmb_roles.SelectedItem.ToString());
+            HandleCheckboxClick(cb_roles_fun, () =>
+                GrantRevokeExecute(cmb_roles.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_function.SelectedItem?.ToString(), "Function", cb_roles_fun.Checked),
+                () => LoadGrantRoles(cmb_roles.SelectedItem?.ToString()));
         }
 
         private void cb_user_pk_Click(object sender, EventArgs e)
         {
-            bool check = cb_user_pk.Checked;
-            if (!GrantRevokeExecute(cmb_username.SelectedItem.ToString(), cmb_user.SelectedItem.ToString(), cmb_package.SelectedItem.ToString(), "Package", check))
-                cb_user_pk.Checked = !check;
-            else
-                LoadGrantUser(cmb_username.SelectedItem.ToString());
+            HandleCheckboxClick(cb_user_pk, () =>
+                GrantRevokeExecute(cmb_username.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_package.SelectedItem?.ToString(), "Package", cb_user_pk.Checked),
+                () => LoadGrantUser(cmb_username.SelectedItem?.ToString()));
         }
-
         private void cb_roles_pk_Click(object sender, EventArgs e)
         {
-            bool check = cb_roles_pk.Checked;
-            if (!GrantRevokeExecute(cmb_roles.SelectedItem.ToString(), cmb_user.SelectedItem.ToString(), cmb_package.SelectedItem.ToString(), "Package", check))
-                cb_roles_pk.Checked = !check;
-            else
-                LoadGrantRoles(cmb_roles.SelectedItem.ToString());
+            HandleCheckboxClick(cb_roles_pk,
+                () => GrantRevokeExecute(
+                    cmb_roles.SelectedItem?.ToString(),
+                    cmb_user.SelectedItem?.ToString(),
+                    cmb_package.SelectedItem?.ToString(),
+                    "Package",
+                    cb_roles_pk.Checked),
+                () => LoadGrantRoles(cmb_roles.SelectedItem?.ToString()));
         }
+
+
 
         private void cb_select_us_Click(object sender, EventArgs e)
         {
-            bool check = cb_select_us.Checked;
-            if (!GrantRevokeTable(cmb_username.SelectedItem.ToString(), cmb_user.SelectedItem.ToString(), cmb_table.SelectedItem.ToString(), "Select", check))
-                cb_select_us.Checked = !check;
-            else
-                UpdateUserCheckboxColors();
+            HandleCheckboxClick(cb_select_us, () =>
+                GrantRevokeTable(cmb_username.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_table.SelectedItem?.ToString(), "Select", cb_select_us.Checked),
+                UpdateUserCheckboxColors);
         }
 
         private void cb_insert_us_Click(object sender, EventArgs e)
         {
-            bool check = cb_insert_us.Checked;
-            if (!GrantRevokeTable(cmb_username.SelectedItem.ToString(), cmb_user.SelectedItem.ToString(), cmb_table.SelectedItem.ToString(), "Insert", check))
-                cb_insert_us.Checked = !check;
-            else
-                UpdateUserCheckboxColors();
+            HandleCheckboxClick(cb_insert_us, () =>
+                GrantRevokeTable(cmb_username.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_table.SelectedItem?.ToString(), "Insert", cb_insert_us.Checked),
+                UpdateUserCheckboxColors);
         }
 
         private void cb_update_us_Click(object sender, EventArgs e)
         {
-            bool check = cb_update_us.Checked;
-            if (!GrantRevokeTable(cmb_username.SelectedItem.ToString(), cmb_user.SelectedItem.ToString(), cmb_table.SelectedItem.ToString(), "Update", check))
-                cb_update_us.Checked = !check;
-            else
-                UpdateUserCheckboxColors();
+            HandleCheckboxClick(cb_update_us, () =>
+                GrantRevokeTable(cmb_username.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_table.SelectedItem?.ToString(), "Update", cb_update_us.Checked),
+                UpdateUserCheckboxColors);
         }
 
         private void cb_delete_us_Click(object sender, EventArgs e)
         {
-            bool check = cb_delete_us.Checked;
-            if (!GrantRevokeTable(cmb_username.SelectedItem.ToString(), cmb_user.SelectedItem.ToString(), cmb_table.SelectedItem.ToString(), "Delete", check))
-                cb_delete_us.Checked = !check;
-            else
-                UpdateUserCheckboxColors();
+            HandleCheckboxClick(cb_delete_us, () =>
+                GrantRevokeTable(cmb_username.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_table.SelectedItem?.ToString(), "Delete", cb_delete_us.Checked),
+                UpdateUserCheckboxColors);
         }
 
         private void cb_select_ro_Click(object sender, EventArgs e)
         {
-            bool check = cb_select_ro.Checked;
-            if (!GrantRevokeTable(cmb_roles.SelectedItem.ToString(), cmb_user.SelectedItem.ToString(), cmb_table.SelectedItem.ToString(), "Select", check))
-                cb_select_ro.Checked = !check;
-            else
-                UpdateRoleCheckboxColors();
+            HandleCheckboxClick(cb_select_ro, () =>
+                GrantRevokeTable(cmb_roles.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_table.SelectedItem?.ToString(), "Select", cb_select_ro.Checked),
+                UpdateRoleCheckboxColors);
         }
+
 
         private void cb_insert_ro_Click(object sender, EventArgs e)
         {
-            bool check = cb_insert_ro.Checked;
-            if (!GrantRevokeTable(cmb_roles.SelectedItem.ToString(), cmb_user.SelectedItem.ToString(), cmb_table.SelectedItem.ToString(), "Insert", check))
-                cb_insert_ro.Checked = !check;
-            else
-                UpdateRoleCheckboxColors();
+            HandleCheckboxClick(cb_insert_ro, () =>
+                GrantRevokeTable(cmb_roles.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_table.SelectedItem?.ToString(), "Insert", cb_insert_ro.Checked),
+                UpdateRoleCheckboxColors);
         }
 
         private void cb_update_ro_Click(object sender, EventArgs e)
         {
-            bool check = cb_update_ro.Checked;
-            if (!GrantRevokeTable(cmb_roles.SelectedItem.ToString(), cmb_user.SelectedItem.ToString(), cmb_table.SelectedItem.ToString(), "Update", check))
-                cb_update_ro.Checked = !check;
-            else
-                UpdateRoleCheckboxColors();
+            HandleCheckboxClick(cb_update_ro, () =>
+                GrantRevokeTable(cmb_roles.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_table.SelectedItem?.ToString(), "Update", cb_update_ro.Checked),
+                UpdateRoleCheckboxColors);
         }
 
         private void cb_delete_ro_Click(object sender, EventArgs e)
         {
-            bool check = cb_delete_ro.Checked;
-            if (!GrantRevokeTable(cmb_roles.SelectedItem.ToString(), cmb_user.SelectedItem.ToString(), cmb_table.SelectedItem.ToString(), "Delete", check))
-                cb_delete_ro.Checked = !check;
-            else
-                UpdateRoleCheckboxColors();
+            HandleCheckboxClick(cb_delete_ro, () =>
+                GrantRevokeTable(cmb_roles.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_table.SelectedItem?.ToString(), "Delete", cb_delete_ro.Checked),
+                UpdateRoleCheckboxColors);
         }
 
-        // Nút grant/revoke role
+        private bool isProgrammaticChange = false;
+
+        private void HandleCheckboxClick(CheckBox cb, Func<bool> grantAction, Action onSuccess)
+        {
+            if (isProgrammaticChange) return;
+
+            bool original = cb.Checked;
+            bool result = grantAction();
+
+            if (!result)
+            {
+                isProgrammaticChange = true;
+                cb.Checked = !original;
+                isProgrammaticChange = false;
+            }
+            else
+            {
+                onSuccess();
+            }
+        }
+
+
         private void btn_Grant_Revoke_Role_Click(object sender, EventArgs e)
         {
             string user = cmb_username.SelectedItem.ToString();
@@ -548,5 +548,43 @@ namespace QuanLyNganHang.Forms
                 UpdateGrantRevokeRoleButtonText(user, role);
             }
         }
+
+        private void btn_Grant_Login_Click(object sender, EventArgs e)
+        {
+            string user = cmb_username.SelectedItem?.ToString();
+            if (string.IsNullOrEmpty(user))
+            {
+                MessageBox.Show("Chưa chọn user.");
+                return;
+            }
+
+            var confirm = MessageBox.Show($"Bạn muốn cấp quyền đăng nhập cho user '{user}'?",
+                "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+            if (confirm == DialogResult.Yes)
+            {
+                if (_authService.GrantLogin(user))
+                    MessageBox.Show("Cấp quyền CREATE SESSION thành công.");
+            }
+        }
+        private void btn_Revoke_Login_Click(object sender, EventArgs e)
+        {
+            string user = cmb_username.SelectedItem?.ToString();
+            if (string.IsNullOrEmpty(user))
+            {
+                MessageBox.Show("Chưa chọn user.");
+                return;
+            }
+
+            var confirm = MessageBox.Show($"Bạn muốn thu hồi quyền đăng nhập của user '{user}'?",
+                "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+            if (confirm == DialogResult.Yes)
+            {
+                if (_authService.RevokeLogin(user))
+                    MessageBox.Show("Đã thu hồi quyền CREATE SESSION thành công.");
+            }
+        }
+
     }
 }

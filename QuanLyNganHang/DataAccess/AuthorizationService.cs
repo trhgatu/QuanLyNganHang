@@ -69,4 +69,12 @@ public class AuthorizationService
     {
         return _authorization.Grant_Revoke_Role(username, role, dk);
     }
+    public bool GrantLogin(string username)
+    {
+        return _authorization.GrantLogin(username);
+    }
+    public bool RevokeLogin(string username)
+    {
+        return _authorization.RevokeLogin(username);
+    }
 }
