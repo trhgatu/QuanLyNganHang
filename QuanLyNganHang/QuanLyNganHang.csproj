@@ -84,12 +84,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Core\Helpers\EncryptionHelper.cs" />
     <Compile Include="Core\Helpers\HashHelper.cs" />
     <Compile Include="Core\SessionContext.cs" />
+    <Compile Include="DataAccess\AccountDataAccess.cs" />
     <Compile Include="DataAccess\AuditLogDataAccess.cs" />
     <Compile Include="DataAccess\AuthorizationManager.cs" />
     <Compile Include="DataAccess\AuthorizationService.cs" />
     <Compile Include="DataAccess\BranchDataAccess.cs" />
+    <Compile Include="DataAccess\CustomerDataAccess.cs" />
     <Compile Include="DataAccess\Prod\CreateUser.cs" />
     <Compile Include="DataAccess\Prod\DeleteUser.cs" />
     <Compile Include="DataAccess\EmployeeDataAccess.cs" />
@@ -99,11 +102,35 @@
     <Compile Include="DataAccess\SettingsDataAccess.cs" />
     <Compile Include="DataAccess\TransactionDataAccess.cs" />
     <Compile Include="DataAccess\UserDataAccess.cs" />
+    <Compile Include="Forms\AccountManagement\FormActivateAccount.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\AccountManagement\FormFreezeAccount.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\CustomerManagement\FormAddEditCustomer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\AccountManagement\FormCloseAccount.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\AccountManagement\FormOpenAccount.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Forms\Authorization\AuthorizationForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\Authorization\AuthorizationForm.Designer.cs">
       <DependentUpon>AuthorizationForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\CustomerManagement\FormCustomerDetails.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\CustomerManagement\FormCustomerSearch.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\CustomerManagement\FormSearchCustomerOpenAccount.cs">
+      <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\Dashboard\ContentManager.cs" />
     <Compile Include="Forms\Dashboard\Content\AccountManagementContent.cs" />
