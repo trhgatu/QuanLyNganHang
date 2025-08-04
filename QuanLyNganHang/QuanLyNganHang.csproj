@@ -165,11 +165,17 @@
     <Compile Include="Forms\Login\LoginValidator.cs" />
     <Compile Include="Forms\Login\SettingsManager.cs" />
     <Compile Include="Forms\Login\StatusManager.cs" />
-    <Compile Include="Forms\Profile\ProfileForm.cs">
+    <Compile Include="Forms\Profile\ChangePasswordForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\Profile\ProfileForm.Designer.cs">
-      <DependentUpon>ProfileForm.cs</DependentUpon>
+    <Compile Include="Forms\Profile\ChangePasswordForm.Designer.cs">
+      <DependentUpon>ChangePasswordForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Profile\UpdateProfileForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Profile\UpdateProfileForm.Designer.cs">
+      <DependentUpon>UpdateProfileForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\UserManagement\CreateUserForm.cs">
       <SubType>Form</SubType>
