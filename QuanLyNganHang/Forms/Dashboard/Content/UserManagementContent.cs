@@ -194,8 +194,7 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
 
                 if (ShowConfirmation($"Bạn có chắc chắn muốn xóa nhân viên {(string.IsNullOrWhiteSpace(username) ? "[Chưa có tài khoản]" : $"'{username}'")} không?"))
                 {
-                    var deleter = new DeleteUser();
-                    bool success = deleter.Pro_DropUserById(employeeId);
+                    bool success = userDataAccess.Pro_DropUserById(employeeId);
 
                     if (success)
                     {
