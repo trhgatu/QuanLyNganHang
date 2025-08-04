@@ -14,7 +14,7 @@ namespace QuanLyNganHang.DataAccess
         {
             using (var conn = Database.Get_Connect())
             {
-                string query = "SELECT branch_id, branch_name FROM ADMIN_NGANHANG.branches WHERE status = 1";
+                string query = "SELECT branch_id, branch_name, branch_code FROM ADMIN_NGANHANG.branches WHERE status = 1";
 
                 using (var cmd = new OracleCommand(query, conn))
                 using (var adapter = new OracleDataAdapter(cmd))
@@ -25,5 +25,6 @@ namespace QuanLyNganHang.DataAccess
                 }
             }
         }
+
     }
 }

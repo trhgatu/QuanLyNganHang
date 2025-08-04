@@ -31,6 +31,7 @@ namespace QuanLyNganHang.Forms.Dashboard
         {
             var menuItems = new[]
             {
+                new {Text = "👤 Thông tin cá nhân", Key = "ProfileManagement"},
                 new { Text = "👥 Quản lý Người dùng", Key = "UserManagement" },
                 new { Text = "👤 Quản lý Khách hàng", Key = "CustomerManagement" },
                 new { Text = "🏦 Quản lý Tài khoản", Key = "AccountManagement" },
@@ -39,7 +40,7 @@ namespace QuanLyNganHang.Forms.Dashboard
                 new { Text = "🔐 Quản lý tài khoản Oracle", Key = "OracleAccountManagement" },
                 new { Text = "📋 Nhật ký Audit", Key = "AuditLog" },
                 new { Text = "📊 Báo cáo", Key = "Reports" },
-                new { Text = "⚙️ Cài đặt", Key = "Settings" }
+
             };
 
             for (int i = 0; i < menuItems.Length; i++)
@@ -83,11 +84,11 @@ namespace QuanLyNganHang.Forms.Dashboard
                 Padding = new Padding(20, 0, 0, 0),
                 Cursor = Cursors.Hand,
                 Dock = DockStyle.Bottom,
-                Tag = "Logout" // String key
+                Tag = "Logout"
             };
 
             btnLogout.FlatAppearance.BorderSize = 0;
-            btnLogout.Click += MenuButton_Click; // Sử dụng chung event handler
+            btnLogout.Click += MenuButton_Click;
 
             menuPanel.Controls.Add(btnLogout);
         }

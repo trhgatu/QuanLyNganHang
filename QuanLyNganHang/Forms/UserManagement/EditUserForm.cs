@@ -203,9 +203,18 @@ namespace QuanLyNganHang.Forms.UserManagement
 
         private void LoadComboboxes(DataRow row)
         {
-            var branchTable = branchDataAccess.GetAllBranches();
-            cb_branch.DataSource = branchTable;
-            cb_branch.DisplayMember = "branch_name";
+            var branches = branchDataAccess.GetAllBranches();
+            branches.Columns.Add("display", typeof(string));
+
+            foreach (DataRow br in branches.Rows)
+            {
+                string name = br["branch_name"].ToString();
+                string code = br["branch_code"].ToString();
+                br["display"] = $"{name} ({code})";
+            }
+
+            cb_branch.DataSource = branches;
+            cb_branch.DisplayMember = "display";
             cb_branch.ValueMember = "branch_id";
 
             var roleTable = roleDataAccess.GetAllRoles();
@@ -223,6 +232,7 @@ namespace QuanLyNganHang.Forms.UserManagement
             else
                 cb_branch.SelectedIndex = -1;
         }
+
 
         private void btn_save_Click(object sender, EventArgs e)
         {

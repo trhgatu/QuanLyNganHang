@@ -29,15 +29,36 @@ namespace QuanLyNganHang
             this.BackColor = DashboardConstants.Colors.Background;
 
             headerManager = new HeaderManager();
-            var (fullName, roleName, employeeId, position, branchId, branchName) = EmployeeDataAccess.GetProfileFull();
+            var (
+    fullName, roleName, employeeId, position,
+    email, oracleUser, phone, address,
+    branchId, branchCode, branchName, branchAddress, branchPhone,
+    bankId, bankCode, bankName, bankAddress, bankPhone, bankEmail
+) = EmployeeDataAccess.GetProfileFull();
 
-            SessionContext.OracleUser = Database.User.ToUpper(); 
+
             SessionContext.FullName = fullName;
             SessionContext.RoleName = roleName;
             SessionContext.EmployeeId = employeeId;
             SessionContext.Position = position;
+            SessionContext.Email = email;
+            SessionContext.OracleUser = oracleUser;
+            SessionContext.Phone = phone;
+            SessionContext.Address = address;
+
             SessionContext.BranchId = branchId;
+            SessionContext.BranchCode = branchCode;
             SessionContext.BranchName = branchName;
+            SessionContext.BranchAddress = branchAddress;
+            SessionContext.BranchPhone = branchPhone;
+
+            SessionContext.BankId = bankId;
+            SessionContext.BankCode = bankCode;
+            SessionContext.BankName = bankName;
+            SessionContext.BankAddress = bankAddress;
+            SessionContext.BankPhone = bankPhone;
+            SessionContext.BankEmail = bankEmail;
+
             var headerPanel = headerManager.CreateHeader(this, fullName, roleName);
             this.Controls.Add(headerPanel);
             menuManager = new MenuManager();

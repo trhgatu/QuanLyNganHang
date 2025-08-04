@@ -507,9 +507,5 @@ namespace QuanLyNganHang.DataAccess
                 return false;
             }
         }
-
-
-
-
     }
 }

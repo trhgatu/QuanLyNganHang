@@ -90,7 +90,6 @@
     <Compile Include="DataAccess\AccountDataAccess.cs" />
     <Compile Include="DataAccess\AuditLogDataAccess.cs" />
     <Compile Include="DataAccess\AuthorizationManager.cs" />
-    <Compile Include="DataAccess\AuthorizationService.cs" />
     <Compile Include="DataAccess\BranchDataAccess.cs" />
     <Compile Include="DataAccess\CustomerDataAccess.cs" />
     <Compile Include="DataAccess\Prod\CreateUser.cs" />
@@ -99,7 +98,6 @@
     <Compile Include="DataAccess\PermissionDataAccess.cs" />
     <Compile Include="DataAccess\ReportsDataAccess.cs" />
     <Compile Include="DataAccess\RoleDataAccess.cs" />
-    <Compile Include="DataAccess\SettingsDataAccess.cs" />
     <Compile Include="DataAccess\TransactionDataAccess.cs" />
     <Compile Include="DataAccess\UserDataAccess.cs" />
     <Compile Include="Forms\AccountManagement\FormActivateAccount.cs">
@@ -139,8 +137,8 @@
     <Compile Include="Forms\Dashboard\Content\ContentFactory.cs" />
     <Compile Include="Forms\Dashboard\Content\CustomerManagementContent.cs" />
     <Compile Include="Forms\Dashboard\Content\PermissionManagementContent.cs" />
+    <Compile Include="Forms\Dashboard\Content\ProfileManagementContent.cs" />
     <Compile Include="Forms\Dashboard\Content\ReportsContent.cs" />
-    <Compile Include="Forms\Dashboard\Content\SettingsContent.cs" />
     <Compile Include="Forms\Dashboard\Content\TransactionManagementContent.cs" />
     <Compile Include="Forms\Dashboard\Content\UserManagementContent.cs" />
     <Compile Include="Forms\Dashboard\DashboardConstants.cs" />

@@ -6,37 +6,76 @@ namespace QuanLyNganHang.DataAccess
 {
     public class EmployeeDataAccess
     {
-        public static (string FullName, string RoleName, int EmployeeId, string Position, int BranchId, string BranchName) GetProfileFull()
+        public static (
+    string FullName, string RoleName, int EmployeeId, string Position,
+    string Email, string OracleUser, string Phone, string Address,
+    int BranchId, string BranchCode, string BranchName, string BranchAddress, string BranchPhone,
+    int BankId, string BankCode, string BankName, string BankAddress, string BankPhone, string BankEmail
+) GetProfileFull()
         {
             using (var conn = Database.Get_Connect())
             {
                 string query = @"
-                SELECT e.full_name, r.role_name, e.employee_id, e.position, b.branch_id, b.branch_name
-                FROM ADMIN_NGANHANG.employees e
-                JOIN ADMIN_NGANHANG.employee_roles er ON e.employee_id = er.employee_id
-                JOIN ADMIN_NGANHANG.roles r ON r.role_id = er.role_id
-                JOIN ADMIN_NGANHANG.branches b ON e.branch_id = b.branch_id
-                WHERE UPPER(e.oracle_user) = SYS_CONTEXT('USERENV', 'SESSION_USER')";
+        SELECT 
+            e.full_name,
+            r.role_name,
+            e.employee_id,
+            e.position,
+            e.email,
+            e.oracle_user,
+            e.phone,
+            e.address,
+            b.branch_id,
+            b.branch_code,
+            b.branch_name,
+            b.address AS branch_address,
+            b.phone AS branch_phone,
+            bk.bank_id,
+            bk.bank_code,
+            bk.bank_name,
+            bk.address AS bank_address,
+            bk.phone AS bank_phone,
+            bk.email AS bank_email
+        FROM ADMIN_NGANHANG.employees e
+        JOIN ADMIN_NGANHANG.employee_roles er ON e.employee_id = er.employee_id
+        JOIN ADMIN_NGANHANG.roles r ON r.role_id = er.role_id
+        JOIN ADMIN_NGANHANG.branches b ON e.branch_id = b.branch_id
+        JOIN ADMIN_NGANHANG.banks bk ON b.bank_id = bk.bank_id
+        WHERE UPPER(e.oracle_user) = SYS_CONTEXT('USERENV', 'SESSION_USER')";
 
                 using (var cmd = new OracleCommand(query, conn))
                 using (var reader = cmd.ExecuteReader())
                 {
                     if (reader.Read())
                     {
-                        return (
-                            reader.GetString(0),
-                            reader.GetString(1),
-                            reader.GetInt32(2),
-                            reader.IsDBNull(3) ? null : reader.GetString(3),
-                            reader.GetInt32(4),
-                            reader.GetString(5)
-                        );
+                         return (
+                         reader.GetString(0),
+                         reader.GetString(1),
+                         reader.GetInt32(2),
+                         reader.IsDBNull(3) ? null : reader.GetString(3),
+                         reader.IsDBNull(4) ? null : reader.GetString(4),
+                         reader.IsDBNull(5) ? null : reader.GetString(5), 
+                         reader.IsDBNull(6) ? null : reader.GetString(6),  
+                         reader.IsDBNull(7) ? null : reader.GetString(7), 
+                         reader.GetInt32(8),  
+                         reader.GetString(9), 
+                         reader.GetString(10), 
+                         reader.IsDBNull(11) ? null : reader.GetString(11), 
+                         reader.IsDBNull(12) ? null : reader.GetString(12), 
+                         reader.GetInt32(13), 
+                         reader.GetString(14), 
+                         reader.GetString(15),
+                         reader.IsDBNull(16) ? null : reader.GetString(16),
+                         reader.IsDBNull(17) ? null : reader.GetString(17),
+                         reader.IsDBNull(18) ? null : reader.GetString(18) 
+                     );
+
                     }
                 }
             }
-
-            return ("Không rõ", "Không rõ", 0, null, 0, null);
+            return ("Không rõ", "Không rõ", 0, null, null, null, null,null, 0, null, null, null, null, 0, null, null, null, null, null);
         }
+
         public static bool UsernameExists(string username, OracleConnection conn)
         {
             string query = "SELECT COUNT(*) FROM ADMIN_NGANHANG.system_users WHERE UPPER(username) = :username";

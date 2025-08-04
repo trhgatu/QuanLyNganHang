@@ -154,7 +154,6 @@ namespace QuanLyNganHang.DataAccess
             {
                 try
                 {
-                    // 1. Cập nhật bảng employees
                     string updateEmp = @"UPDATE ADMIN_NGANHANG.employees SET
                                     full_name = :fullName,
                                     email = :email,
@@ -204,7 +203,6 @@ namespace QuanLyNganHang.DataAccess
                     }
                     else
                     {
-                        // 4. Insert system_users
                         string insertUser = @"INSERT INTO ADMIN_NGANHANG.system_users (user_id, username, password_hash, employee_id, status, created_date)
                                       VALUES (seq_system_user_id.NEXTVAL, :username, :passwordHash, :employeeId, 1, SYSDATE)";
                         var cmdInsert = new OracleCommand(insertUser, conn);
@@ -215,13 +213,11 @@ namespace QuanLyNganHang.DataAccess
                         cmdInsert.ExecuteNonQuery();
                     }
 
-                    // 5. Xóa role cũ
                     var cmdDeleteRole = new OracleCommand("DELETE FROM ADMIN_NGANHANG.employee_roles WHERE employee_id = :eid", conn);
                     cmdDeleteRole.Transaction = tran;
                     cmdDeleteRole.Parameters.Add("eid", employeeId);
                     cmdDeleteRole.ExecuteNonQuery();
 
-                    // 6. Gán role mới
                     var cmdInsertRole = new OracleCommand("INSERT INTO ADMIN_NGANHANG.employee_roles (employee_id, role_id) VALUES (:eid, :rid)", conn);
                     cmdInsertRole.Transaction = tran;
                     cmdInsertRole.Parameters.Add("eid", employeeId);

@@ -14,7 +14,7 @@ namespace QuanLyNganHang.Forms
 {
     public partial class AuthorizationForm : Form
     {
-        private AuthorizationService _authService;
+        private AuthorizationManager p;
 
         public AuthorizationForm()
         {
@@ -22,7 +22,7 @@ namespace QuanLyNganHang.Forms
             CenterToScreen();
             try
             {
-                _authService = new AuthorizationService();
+                p = new AuthorizationManager();
 
                 LoadUsers();
                 LoadRoles();
@@ -33,48 +33,86 @@ namespace QuanLyNganHang.Forms
             }
         }
 
-        // Load danh sách users vào combobox
+        private void set_Color_Checkbox_user()
+        {
+            cb_select_us.ForeColor = cb_select_us.Checked ? Color.Green : Color.Red;
+            cb_insert_us.ForeColor = cb_insert_us.Checked ? Color.Green : Color.Red;
+            cb_update_us.ForeColor = cb_update_us.Checked ? Color.Green : Color.Red;
+            cb_delete_us.ForeColor = cb_delete_us.Checked ? Color.Green : Color.Red;
+        }
+        private void set_Color_Checkbox_roles()
+        {
+            cb_select_ro.ForeColor = cb_select_ro.Checked ? Color.Green : Color.Red;
+            cb_insert_ro.ForeColor = cb_insert_ro.Checked ? Color.Green : Color.Red;
+            cb_update_ro.ForeColor = cb_update_ro.Checked ? Color.Green : Color.Red;
+            cb_delete_ro.ForeColor = cb_delete_ro.Checked ? Color.Green : Color.Red;
+        }
+
+        private void Set_Color_Grant_User()
+        {
+            cb_user_pro.ForeColor = cb_user_pro.Checked ? Color.Green : Color.Red;
+            cb_user_fun.ForeColor = cb_user_fun.Checked ? Color.Green : Color.Red;
+            cb_user_pk.ForeColor = cb_user_pk.Checked ? Color.Green : Color.Red;
+        }
+        private void Set_Color_Grant_Roles()
+        {
+            cb_roles_pro.ForeColor = cb_roles_pro.Checked ? Color.Green : Color.Red;
+            cb_roles_fun.ForeColor = cb_roles_fun.Checked ? Color.Green : Color.Red;
+            cb_roles_pk.ForeColor = cb_roles_pk.Checked ? Color.Green : Color.Red;
+        }
+        private void Set_Label_Table()
+        {
+            string tableName = "Table: ";
+
+            if (cmb_table.SelectedItem != null)
+            {
+                tableName += cmb_table.SelectedItem.ToString();
+            }
+
+            lbl_table_roles.Text = tableName;
+            lbl_table_user.Text = tableName;
+        }
+        private void Set_Text_Button(string user, string role)
+        {
+            int result = p.Get_Roles_User_Check(user, role);
+
+            if (result == 1)
+            {
+                btn_Grant_Revoke_Role.Text = "Revoke";
+            }
+            else if (result == 0)
+            {
+                btn_Grant_Revoke_Role.Text = "Grant";
+            }
+        }
+
         private void LoadUsers()
         {
-            var users = _authService.GetUsers();
+            DataTable table = p.Get_User();
+            if (table != null)
+            {
+                cmb_user.Items.Clear();
+                cmb_username.Items.Clear();
 
-            cmb_user.Items.Clear();
-            cmb_username.Items.Clear();
+                foreach (DataRow row in table.Rows)
+                {
+                    string username = row[0].ToString();
+                    cmb_user.Items.Add(username);
+                    cmb_username.Items.Add(username);
+                }
 
-            cmb_user.Items.AddRange(users.ToArray());
-            cmb_username.Items.AddRange(users.ToArray());
-
-            if (cmb_user.Items.Count > 0)
-                cmb_user.SelectedIndex = 0;
-
-            if (cmb_username.Items.Count > 0)
-                cmb_username.SelectedIndex = 0;
+                if (cmb_user.Items.Count > 0)
+                    cmb_user.SelectedIndex = 0;
+                if (cmb_username.Items.Count > 0)
+                    cmb_username.SelectedIndex = 0;
+            }
+            else
+            {
+                MessageBox.Show("Không tải được danh sách người dùng.");
+            }
         }
 
-        // Load danh sách roles
-        private void LoadRoles()
-        {
-            var roles = _authService.GetRoles();
-            cmb_roles.Items.Clear();
-            cmb_roles.Items.AddRange(roles.ToArray());
-            if (cmb_roles.Items.Count > 0)
-                cmb_roles.SelectedIndex = 0;
-        }
-
-        // Load procedures, functions, packages, tables cho user chọn
-        private void LoadObjectsForUser(string userOwner)
-        {
-            ClearComboBoxes();
-
-            AddItemsToComboBox(cmb_procedure, _authService.GetProcedures(userOwner, "PROCEDURE"));
-            AddItemsToComboBox(cmb_function, _authService.GetProcedures(userOwner, "FUNCTION"));
-            AddItemsToComboBox(cmb_package, _authService.GetProcedures(userOwner, "PACKAGE"));
-            AddItemsToComboBox(cmb_table, _authService.GetTables(userOwner));
-
-            SelectComboBoxDefault();
-        }
-
-        private void ClearComboBoxes()
+        private void Clear_Combobox()
         {
             cmb_procedure.Items.Clear();
             cmb_function.Items.Clear();
@@ -82,472 +120,676 @@ namespace QuanLyNganHang.Forms
             cmb_table.Items.Clear();
         }
 
-        private void AddItemsToComboBox(ComboBox cmb, List<string> items)
+        private void Select_Combobox()
         {
-            if (items.Count == 0)
-                cmb.Items.Add("");
-            else
-                cmb.Items.AddRange(items.ToArray());
-        }
+            if (cmb_procedure.Items.Count == 0)
+                cmb_procedure.Items.Add("");
 
-        private void SelectComboBoxDefault()
-        {
+            if (cmb_function.Items.Count == 0)
+                cmb_function.Items.Add("");
+
+            if (cmb_package.Items.Count == 0)
+                cmb_package.Items.Add("");
+
+            if (cmb_table.Items.Count == 0)
+                cmb_table.Items.Add("");
+
             cmb_procedure.SelectedIndex = 0;
             cmb_function.SelectedIndex = 0;
             cmb_package.SelectedIndex = 0;
             cmb_table.SelectedIndex = 0;
         }
 
-        // Cập nhật màu checkbox dựa vào trạng thái Checked
+        private void LoadRoles()
+        {
+            DataTable table = p.Get_Roles();
+            if (table != null)
+            {
+                cmb_roles.Items.Clear();
+
+                foreach (DataRow row in table.Rows)
+                {
+                    cmb_roles.Items.Add(row[0].ToString());
+                }
+
+                if (cmb_roles.Items.Count > 0)
+                    cmb_roles.SelectedIndex = 0;
+            }
+            else
+            {
+                MessageBox.Show("Không tải được danh sách Roles.");
+            }
+        }
+
+
         private void SetCheckboxColor(CheckBox cb)
         {
             cb.ForeColor = cb.Checked ? Color.Green : Color.Red;
         }
-        private void UpdateUserCheckboxColors()
-        {
-            SetCheckboxColor(cb_select_us);
-            SetCheckboxColor(cb_insert_us);
-            SetCheckboxColor(cb_update_us);
-            SetCheckboxColor(cb_delete_us);
-        }
-        private void UpdateRoleCheckboxColors()
-        {
-            SetCheckboxColor(cb_select_ro);
-            SetCheckboxColor(cb_insert_ro);
-            SetCheckboxColor(cb_update_ro);
-            SetCheckboxColor(cb_delete_ro);
-        }
-        private void UpdateGrantUserColors()
-        {
-            SetCheckboxColor(cb_user_pro);
-            SetCheckboxColor(cb_user_fun);
-            SetCheckboxColor(cb_user_pk);
-        }
-        private void UpdateGrantRoleColors()
-        {
-            SetCheckboxColor(cb_roles_pro);
-            SetCheckboxColor(cb_roles_fun);
-            SetCheckboxColor(cb_roles_pk);
-        }
 
-        private void UpdateLabelTable()
+        private void Load_pro_user(string userowner)
         {
-            if (cmb_table.SelectedItem != null)
+            Clear_Combobox();
+
+            // Load PROCEDURE
+            DataTable dtProc = p.Get_Procedure_User(userowner, "PROCEDURE");
+            if (dtProc != null)
             {
-                string text = "Table: " + cmb_table.SelectedItem.ToString();
-                lbl_table_roles.Text = text;
-                lbl_table_user.Text = text;
-            }
-        }
-
-        // Set text nút Grant/Revoke Role
-        private void UpdateGrantRevokeRoleButtonText(string user, string role)
-        {
-            int check = _authService.GetRolesUserCheck(user, role);
-            if (check == 1)
-                btn_Grant_Revoke_Role.Text = "Revoke Role";
-            else if (check == 0)
-                btn_Grant_Revoke_Role.Text = "Grant Role";
-        }
-
-        // Load data roles user, grants user/roles...
-        private void LoadRolesUser(string user)
-        {
-            dtg_roles.DataSource = _authService.GetRolesUser(user);
-        }
-        private void LoadGrantUser(string user)
-        {
-            dtg_grant.DataSource = _authService.GetGrantUser(user);
-        }
-        private void LoadGrantRoles(string role)
-        {
-            dgv_grant_roles.DataSource = _authService.GetGrantUser(role);
-        }
-
-        // Load grant cho table user hoặc role
-        private void LoadGrantTableForUser(string user, string schema, string table)
-        {
-            var dt = _authService.GetGrant(user, schema, table);
-            if (dt == null) return;
-
-            cb_select_us.Checked = dt.AsEnumerable().Any(r => r[0].ToString().ToUpper() == "SELECT");
-            cb_insert_us.Checked = dt.AsEnumerable().Any(r => r[0].ToString().ToUpper() == "INSERT");
-            cb_update_us.Checked = dt.AsEnumerable().Any(r => r[0].ToString().ToUpper() == "UPDATE");
-            cb_delete_us.Checked = dt.AsEnumerable().Any(r => r[0].ToString().ToUpper() == "DELETE");
-        }
-        private void LoadGrantTableForRole(string role, string schema, string table)
-        {
-            var dt = _authService.GetGrant(role, schema, table);
-            if (dt == null) return;
-
-            cb_select_ro.Checked = dt.AsEnumerable().Any(r => r[0].ToString().ToUpper() == "SELECT");
-            cb_insert_ro.Checked = dt.AsEnumerable().Any(r => r[0].ToString().ToUpper() == "INSERT");
-            cb_update_ro.Checked = dt.AsEnumerable().Any(r => r[0].ToString().ToUpper() == "UPDATE");
-            cb_delete_ro.Checked = dt.AsEnumerable().Any(r => r[0].ToString().ToUpper() == "DELETE");
-        }
-
-        // Kiểm tra Execute grant
-        private bool HasExecuteGrant(string principal, string schema, string proc)
-        {
-            var dt = _authService.GetGrant(principal, schema, proc);
-            if (dt == null) return false;
-
-            return dt.AsEnumerable().Any(r => r[0].ToString().ToUpper() == "EXECUTE");
-        }
-        private bool GrantRevokeExecute(string principal, string schema, string proTab, string objectType, bool grant)
-        {
-            if (string.IsNullOrEmpty(proTab))
-            {
-                MessageBox.Show($"{objectType} trống!");
-                return false;
-            }
-            if (string.IsNullOrEmpty(principal))
-            {
-                MessageBox.Show($"Chưa chọn User hoặc Role!");
-                return false;
+                foreach (DataRow row in dtProc.Rows)
+                {
+                    cmb_procedure.Items.Add(row[0].ToString());
+                }
             }
 
-            var res = MessageBox.Show(
-                $"Bạn muốn {(grant ? "gán" : "thu hồi")} quyền Execute {objectType} '{proTab}' cho '{principal}'?",
-                "Xác nhận", MessageBoxButtons.YesNo);
+            // Load FUNCTION
+            DataTable dtFunc = p.Get_Procedure_User(userowner, "FUNCTION");
+            if (dtFunc != null)
+            {
+                foreach (DataRow row in dtFunc.Rows)
+                {
+                    cmb_function.Items.Add(row[0].ToString());
+                }
+            }
 
-            if (res != DialogResult.Yes)
-                return false;
+            // Load PACKAGE
+            DataTable dtPack = p.Get_Procedure_User(userowner, "PACKAGE");
+            if (dtPack != null)
+            {
+                foreach (DataRow row in dtPack.Rows)
+                {
+                    cmb_package.Items.Add(row[0].ToString());
+                }
+            }
 
-            bool result = _authService.GrantRevokePro(principal, schema, proTab, "Execute", grant ? 1 : 0);
+            // Load TABLE
+            DataTable dtTable = p.Get_Table_User(userowner);
+            if (dtTable != null)
+            {
+                foreach (DataRow row in dtTable.Rows)
+                {
+                    cmb_table.Items.Add(row[0].ToString());
+                }
+            }
 
-            if (result)
-                MessageBox.Show($"{(grant ? "Gán" : "Thu hồi")} quyền thành công.");
-
-            return result;
+            Select_Combobox();
         }
 
-        // Hàm chung cho cấp/thu hồi quyền Table SELECT/INSERT/UPDATE/DELETE
-        private bool GrantRevokeTable(string principal, string schema, string table, string privilege, bool grant)
+        private void Load_Roles_User(string user)
         {
-            if (string.IsNullOrEmpty(table))
-            {
-                MessageBox.Show("Chưa chọn Table!");
-                return false;
-            }
-            if (string.IsNullOrEmpty(principal))
-            {
-                MessageBox.Show("Chưa chọn User hoặc Role!");
-                return false;
-            }
-
-            var res = MessageBox.Show(
-                $"Bạn muốn {(grant ? "gán" : "thu hồi")} quyền {privilege} cho Table '{table}' đến '{principal}'?",
-                "Xác nhận", MessageBoxButtons.YesNo);
-
-            if (res != DialogResult.Yes)
-                return false;
-
-            bool result = _authService.GrantRevokePro(principal, schema, table, privilege.ToUpper(), grant ? 1 : 0);
-
-
-            if (result)
-                MessageBox.Show($"{(grant ? "Gán" : "Thu hồi")} quyền thành công.");
-
-            return result;
+            dtg_roles.DataSource = p.Get_Roles_User(user);
         }
-        private bool GrantRevokeUserRole(string user, string role, bool grant)
+
+        private void Load_Grant_User(string user)
         {
-            if (string.IsNullOrEmpty(user))
-            {
-                MessageBox.Show("Chưa chọn User!");
-                return false;
-            }
-            if (string.IsNullOrEmpty(role))
-            {
-                MessageBox.Show("Chưa chọn Role!");
-                return false;
-            }
-
-            var res = MessageBox.Show(
-                $"Bạn muốn {(grant ? "gán" : "thu hồi")} Role '{role}' cho User '{user}'?",
-                "Xác nhận", MessageBoxButtons.YesNo);
-
-            if (res != DialogResult.Yes)
-                return false;
-
-            bool result = _authService.GrantRevokeRole(user, role, grant ? 1 : 0);
-
-            if (result)
-                MessageBox.Show($"{(grant ? "Gán" : "Thu hồi")} Role thành công.");
-
-            return result;
+            dtg_grant.DataSource = p.Get_Grant_User(user);
         }
 
-        // Event xử lý khi chọn user owner thay đổi
+        private void Load_Grant_Roles(string roles)
+        {
+            dgv_grant_roles.DataSource = p.Get_Grant_User(roles);
+        }
+        private void Load_Grant_Table_User(string user, string userschema, string table)
+        {
+            DataTable dt = p.Get_Grant(user, userschema, table);
+
+            bool select = false, insert = false, update = false, delete = false;
+
+            if (dt != null)
+            {
+                foreach (DataRow row in dt.Rows)
+                {
+                    string privilege = row[0].ToString();
+
+                    if (privilege.Equals("SELECT", StringComparison.OrdinalIgnoreCase))
+                        select = true;
+                    else if (privilege.Equals("INSERT", StringComparison.OrdinalIgnoreCase))
+                        insert = true;
+                    else if (privilege.Equals("UPDATE", StringComparison.OrdinalIgnoreCase))
+                        update = true;
+                    else if (privilege.Equals("DELETE", StringComparison.OrdinalIgnoreCase))
+                        delete = true;
+                }
+            }
+
+            cb_select_us.Checked = select;
+            cb_insert_us.Checked = insert;
+            cb_update_us.Checked = update;
+            cb_delete_us.Checked = delete;
+        }
+
+        private void Load_Grant_Table_Roles(string roles, string userschema, string table)
+        {
+            DataTable dt = p.Get_Grant(roles, userschema, table);
+
+            bool select = false, insert = false, update = false, delete = false;
+
+            if (dt != null)
+            {
+                foreach (DataRow row in dt.Rows)
+                {
+                    string privilege = row[0].ToString();
+
+                    if (privilege.Equals("SELECT", StringComparison.OrdinalIgnoreCase))
+                        select = true;
+                    else if (privilege.Equals("INSERT", StringComparison.OrdinalIgnoreCase))
+                        insert = true;
+                    else if (privilege.Equals("UPDATE", StringComparison.OrdinalIgnoreCase))
+                        update = true;
+                    else if (privilege.Equals("DELETE", StringComparison.OrdinalIgnoreCase))
+                        delete = true;
+                }
+            }
+
+            cb_select_ro.Checked = select;
+            cb_insert_ro.Checked = insert;
+            cb_update_ro.Checked = update;
+            cb_delete_ro.Checked = delete;
+        }
+
+        private bool Load_Execute(string user_roles, string userschema, string pro)
+        {
+            DataTable dt = p.Get_Grant(user_roles, userschema, pro);
+            bool execute = false;
+
+            if (dt != null)
+            {
+                foreach (DataRow row in dt.Rows)
+                {
+                    if (row[0].ToString().Equals("EXECUTE", StringComparison.OrdinalIgnoreCase))
+                    {
+                        execute = true;
+                        break; // tối ưu: tìm thấy là thoát luôn
+                    }
+                }
+            }
+
+            return execute;
+        }
+
         private void cmb_user_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string userOwner = cmb_user.SelectedItem.ToString();
-            LoadObjectsForUser(userOwner);
+            string userowner = cmb_user.SelectedItem.ToString();
+            Load_pro_user(userowner);
         }
-
-        // Event xử lý chọn user để load roles, grants, UI
         private void cmb_username_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string user = cmb_username.SelectedItem.ToString();
-            string schema = cmb_user.SelectedItem.ToString();
+            string user = cmb_username.SelectedItem?.ToString() ?? "";
+            string userschema = cmb_user.SelectedItem?.ToString() ?? "";
 
-            LoadRolesUser(user);
-            LoadGrantUser(user);
+            // Load quyền và vai trò
+            Load_Roles_User(user);
+            Load_Grant_User(user);
             lbl_user.Text = "User: " + user;
 
+            // Load quyền bảng
             if (cmb_table.SelectedItem != null)
             {
-                LoadGrantTableForUser(user, schema, cmb_table.SelectedItem.ToString());
-                UpdateUserCheckboxColors();
+                string table = cmb_table.SelectedItem.ToString();
+                Load_Grant_Table_User(user, userschema, table);
+                set_Color_Checkbox_user();
             }
 
+            // Load quyền EXECUTE - Procedure
             if (cmb_procedure.SelectedItem != null)
-                cb_user_pro.Checked = HasExecuteGrant(user, schema, cmb_procedure.SelectedItem.ToString());
+            {
+                string procedure = cmb_procedure.SelectedItem.ToString();
+                cb_user_pro.Checked = Load_Execute(user, userschema, procedure);
+            }
+
+            // Load quyền EXECUTE - Function
             if (cmb_function.SelectedItem != null)
-                cb_user_fun.Checked = HasExecuteGrant(user, schema, cmb_function.SelectedItem.ToString());
+            {
+                string function = cmb_function.SelectedItem.ToString();
+                cb_user_fun.Checked = Load_Execute(user, userschema, function);
+            }
+
+            // Load quyền EXECUTE - Package
             if (cmb_package.SelectedItem != null)
-                cb_user_pk.Checked = HasExecuteGrant(user, schema, cmb_package.SelectedItem.ToString());
+            {
+                string package = cmb_package.SelectedItem.ToString();
+                isProgrammaticChange = true;
+                cb_user_pk.Checked = Load_Execute(user, userschema, package);
+                isProgrammaticChange = false;
+            }
 
+            // Kiểm tra gán/hủy Role cho User
             if (cmb_roles.SelectedItem != null)
-                UpdateGrantRevokeRoleButtonText(user, cmb_roles.SelectedItem.ToString());
+            {
+                string role = cmb_roles.SelectedItem.ToString();
+                Set_Text_Button(user, role);
+            }
 
-            UpdateGrantUserColors();
+            // Hiển thị màu quyền Grant tương ứng
+            Set_Color_Grant_User();
         }
+
 
         // Event xử lý chọn table thay đổi
         private void cmb_table_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string schema = cmb_user.SelectedItem.ToString();
-            string table = cmb_table.SelectedItem.ToString();
+            string userschema = cmb_user.SelectedItem?.ToString() ?? "";
+            string table = cmb_table.SelectedItem?.ToString() ?? "";
 
-            UpdateLabelTable();
+            // Gán tên bảng hiển thị
+            Set_Label_Table();
 
+            // Nếu có user được chọn, load quyền bảng của user
             if (cmb_username.SelectedItem != null)
             {
-                LoadGrantTableForUser(cmb_username.SelectedItem.ToString(), schema, table);
-                UpdateUserCheckboxColors();
+                string user = cmb_username.SelectedItem.ToString();
+                Load_Grant_Table_User(user, userschema, table);
+                set_Color_Checkbox_user();
             }
+
+            // Nếu có role được chọn, load quyền bảng của role
             if (cmb_roles.SelectedItem != null)
             {
-                LoadGrantTableForRole(cmb_roles.SelectedItem.ToString(), schema, table);
-                UpdateRoleCheckboxColors();
+                string roles = cmb_roles.SelectedItem.ToString();
+                Load_Grant_Table_Roles(roles, userschema, table);
+                set_Color_Checkbox_roles();
             }
         }
+
 
         // Event chọn role
         private void cmb_roles_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string schema = cmb_user.SelectedItem.ToString();
-            string role = cmb_roles.SelectedItem.ToString();
+            string userschema = cmb_user.SelectedItem?.ToString() ?? "";
+            string role = cmb_roles.SelectedItem?.ToString() ?? "";
 
-            LoadGrantRoles(role);
+            // Load danh sách quyền Grant từ role
+            Load_Grant_Roles(role);
 
+            // Nếu có bảng được chọn, load quyền trên bảng
             if (cmb_table.SelectedItem != null)
             {
-                LoadGrantTableForRole(role, schema, cmb_table.SelectedItem.ToString());
-                UpdateRoleCheckboxColors();
+                string table = cmb_table.SelectedItem.ToString();
+                Load_Grant_Table_Roles(role, userschema, table);
+                set_Color_Checkbox_roles();
             }
+
+            // Nếu có procedure được chọn, kiểm tra quyền EXECUTE
             if (cmb_procedure.SelectedItem != null)
-                cb_roles_pro.Checked = HasExecuteGrant(role, schema, cmb_procedure.SelectedItem.ToString());
+            {
+                string procedure = cmb_procedure.SelectedItem.ToString();
+                cb_roles_pro.Checked = Load_Execute(role, userschema, procedure);
+            }
+
+            // Nếu có function được chọn
             if (cmb_function.SelectedItem != null)
-                cb_roles_fun.Checked = HasExecuteGrant(role, schema, cmb_function.SelectedItem.ToString());
+            {
+                string function = cmb_function.SelectedItem.ToString();
+                cb_roles_fun.Checked = Load_Execute(role, userschema, function);
+            }
+
+            // Nếu có package được chọn
             if (cmb_package.SelectedItem != null)
-                cb_roles_pk.Checked = HasExecuteGrant(role, schema, cmb_package.SelectedItem.ToString());
+            {
+                string package = cmb_package.SelectedItem.ToString();
+                cb_roles_pk.Checked = Load_Execute(role, userschema, package);
+            }
 
+            // Nếu có username được chọn, kiểm tra gán quyền Role cho User
             if (cmb_username.SelectedItem != null)
-                UpdateGrantRevokeRoleButtonText(cmb_username.SelectedItem.ToString(), role);
+            {
+                string user = cmb_username.SelectedItem.ToString();
+                Set_Text_Button(user, role);
+            }
 
-            UpdateGrantRoleColors();
+            // Cập nhật màu checkbox quyền Grant
+            Set_Color_Grant_Roles();
         }
+
 
         // Event chọn procedure change
         private void cmb_procedure_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string procedure = cmb_procedure.SelectedItem.ToString();
-            string schema = cmb_user.SelectedItem.ToString();
+            string procedure = cmb_procedure.SelectedItem?.ToString() ?? "";
+            string userschema = cmb_user.SelectedItem?.ToString() ?? "";
 
+            // Nếu có user được chọn → kiểm tra quyền EXECUTE
             if (cmb_username.SelectedItem != null)
-                cb_user_pro.Checked = HasExecuteGrant(cmb_username.SelectedItem.ToString(), schema, procedure);
+            {
+                string user = cmb_username.SelectedItem.ToString();
+                cb_user_pro.Checked = Load_Execute(user, userschema, procedure);
+            }
 
+            // Nếu có role được chọn → kiểm tra quyền EXECUTE
             if (cmb_roles.SelectedItem != null)
-                cb_roles_pro.Checked = HasExecuteGrant(cmb_roles.SelectedItem.ToString(), schema, procedure);
+            {
+                string role = cmb_roles.SelectedItem.ToString();
+                cb_roles_pro.Checked = Load_Execute(role, userschema, procedure);
+            }
 
-            UpdateGrantUserColors();
-            UpdateGrantRoleColors();
+            // Cập nhật màu quyền Grant
+            Set_Color_Grant_Roles();
+            Set_Color_Grant_User();
         }
+
 
         private void cmb_function_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string function = cmb_function.SelectedItem.ToString();
-            string schema = cmb_user.SelectedItem.ToString();
+            string function = cmb_function.SelectedItem?.ToString() ?? "";
+            string userschema = cmb_user.SelectedItem?.ToString() ?? "";
 
+            // Nếu có user được chọn → kiểm tra quyền EXECUTE
             if (cmb_username.SelectedItem != null)
-                cb_user_fun.Checked = HasExecuteGrant(cmb_username.SelectedItem.ToString(), schema, function);
-            if (cmb_roles.SelectedItem != null)
-                cb_roles_fun.Checked = HasExecuteGrant(cmb_roles.SelectedItem.ToString(), schema, function);
+            {
+                string user = cmb_username.SelectedItem.ToString();
+                cb_user_fun.Checked = Load_Execute(user, userschema, function);
+            }
 
-            UpdateGrantUserColors();
-            UpdateGrantRoleColors();
+            // Nếu có role được chọn → kiểm tra quyền EXECUTE
+            if (cmb_roles.SelectedItem != null)
+            {
+                string role = cmb_roles.SelectedItem.ToString();
+                cb_roles_fun.Checked = Load_Execute(role, userschema, function);
+            }
+
+            // Cập nhật màu checkbox grant tương ứng
+            Set_Color_Grant_Roles();
+            Set_Color_Grant_User();
         }
+
 
         private void cmb_package_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string package = cmb_package.SelectedItem.ToString();
-            string schema = cmb_user.SelectedItem.ToString();
+            string package = cmb_package.SelectedItem?.ToString() ?? "";
+            string userschema = cmb_user.SelectedItem?.ToString() ?? "";
 
+            // Nếu có user được chọn → kiểm tra quyền EXECUTE
             if (cmb_username.SelectedItem != null)
-                cb_user_pk.Checked = HasExecuteGrant(cmb_username.SelectedItem.ToString(), schema, package);
-            if (cmb_roles.SelectedItem != null)
-                cb_roles_pk.Checked = HasExecuteGrant(cmb_roles.SelectedItem.ToString(), schema, package);
+            {
+                string user = cmb_username.SelectedItem.ToString();
+                cb_user_pk.Checked = Load_Execute(user, userschema, package);
+            }
 
-            UpdateGrantUserColors();
-            UpdateGrantRoleColors();
+            // Nếu có role được chọn → kiểm tra quyền EXECUTE
+            if (cmb_roles.SelectedItem != null)
+            {
+                string role = cmb_roles.SelectedItem.ToString();
+                cb_roles_pk.Checked = Load_Execute(role, userschema, package);
+            }
+
+            // Cập nhật màu quyền GRANT tương ứng
+            Set_Color_Grant_Roles();
+            Set_Color_Grant_User();
+        }
+        private bool Grant_Revoke_pro(
+    string user_roles,
+    string schema,
+    string pro_tab,
+    string type_user,
+    string type_pro_tab,
+    string type,
+    bool grant_revoke)
+        {
+            // Kiểm tra đầu vào rỗng
+            if (string.IsNullOrWhiteSpace(pro_tab))
+            {
+                MessageBox.Show("Mục " + type_pro_tab + " trống!!!");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(user_roles))
+            {
+                MessageBox.Show("Mục " + type_user + " trống!!!");
+                return false;
+            }
+
+            int dk = grant_revoke ? 1 : 0;
+
+            string actionText = grant_revoke ? "gán quyền" : "hủy quyền";
+            string fullMessage = $"Bạn muốn {actionText} {type} {type_pro_tab}: {pro_tab} cho {type_user}: {user_roles} không?";
+
+            DialogResult res = MessageBox.Show(fullMessage, "Thông báo", MessageBoxButtons.YesNo);
+
+            if (res == DialogResult.Yes)
+            {
+                bool result = p.Grant_Revoke_Pro(user_roles, schema, pro_tab, type, dk);
+
+                if (result)
+                {
+                    MessageBox.Show(grant_revoke ? "Gán quyền thành công" : "Thu hồi quyền thành công");
+                    return true;
+                }
+
+                return false;
+            }
+
+            return false;
+        }
+        private void Grant_Revoke_Pro_User(ComboBox cmb, CheckBox ckb, string objectType)
+        {
+            bool isGrant = ckb.Checked;
+            string procedure = cmb.SelectedItem?.ToString() ?? "";
+            string user = cmb_username.SelectedItem?.ToString() ?? "";
+            string schema = cmb_user.SelectedItem?.ToString() ?? "";
+
+            if (Grant_Revoke_pro(user, schema, procedure, "User", objectType, "Execute", isGrant))
+            {
+                Set_Color_Grant_User();
+                Load_Grant_User(user);
+            }
+            else
+            {
+                ckb.Checked = !isGrant;
+            }
+        }
+        private void Grant_Revoke_Pro_Role(ComboBox cmb, CheckBox ckb, string objectType)
+        {
+            bool isGrant = ckb.Checked;
+            string procedure = cmb.SelectedItem?.ToString() ?? "";
+            string role = cmb_roles.SelectedItem?.ToString() ?? "";
+            string schema = cmb_user.SelectedItem?.ToString() ?? "";
+
+            if (Grant_Revoke_pro(role, schema, procedure, "Role", objectType, "Execute", isGrant))
+            {
+                Set_Color_Grant_Roles();
+                Load_Grant_Roles(role);
+            }
+            else
+            {
+                ckb.Checked = !isGrant;
+            }
+        }
+        private void Grant_Revoke_Table_User(CheckBox checkbox, string type)
+        {
+            bool isGrant = checkbox.Checked;
+
+            string table = cmb_table.SelectedItem?.ToString() ?? "";
+            string user = cmb_username.SelectedItem?.ToString() ?? "";
+            string schema = cmb_user.SelectedItem?.ToString() ?? "";
+
+            if (Grant_Revoke_pro(user, schema, table, "User", "Table", type, isGrant))
+            {
+                set_Color_Checkbox_user();
+            }
+            else
+            {
+                checkbox.Checked = !isGrant; // rollback nếu thất bại
+            }
         }
 
-        // Click các checkbox thực hiện grant/revoke
+        private void Grant_Revoke_Table_Role(CheckBox checkbox, string type)
+        {
+            bool isGrant = checkbox.Checked;
+
+            string table = cmb_table.SelectedItem?.ToString() ?? "";
+            string role = cmb_roles.SelectedItem?.ToString() ?? "";
+            string schema = cmb_user.SelectedItem?.ToString() ?? "";
+
+            if (Grant_Revoke_pro(role, schema, table, "Role", "Table", type, isGrant))
+            {
+                set_Color_Checkbox_roles();
+            }
+            else
+            {
+                checkbox.Checked = !isGrant;
+            }
+        }
+
 
         private void cb_user_pro_Click(object sender, EventArgs e)
         {
-            HandleCheckboxClick(cb_user_pro, () =>
-                GrantRevokeExecute(cmb_username.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_procedure.SelectedItem?.ToString(), "Procedure", cb_user_pro.Checked),
-                () => LoadGrantUser(cmb_username.SelectedItem?.ToString()));
+            Grant_Revoke_Pro_User(cmb_procedure, cb_user_pro, "Procedure");
         }
 
         private void cb_roles_pro_Click(object sender, EventArgs e)
         {
-            HandleCheckboxClick(cb_roles_pro, () =>
-                GrantRevokeExecute(cmb_roles.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_procedure.SelectedItem?.ToString(), "Procedure", cb_roles_pro.Checked),
-                () => LoadGrantRoles(cmb_roles.SelectedItem?.ToString()));
+            Grant_Revoke_Pro_Role(cmb_procedure, cb_roles_pro, "Procedure");
         }
+
 
         private void cb_user_fun_Click(object sender, EventArgs e)
         {
-            HandleCheckboxClick(cb_user_fun, () =>
-                GrantRevokeExecute(cmb_username.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_function.SelectedItem?.ToString(), "Function", cb_user_fun.Checked),
-                () => LoadGrantUser(cmb_username.SelectedItem?.ToString()));
+            Grant_Revoke_Pro_User(cmb_function, cb_user_fun, "Function");
         }
-
 
         private void cb_roles_fun_Click(object sender, EventArgs e)
         {
-            HandleCheckboxClick(cb_roles_fun, () =>
-                GrantRevokeExecute(cmb_roles.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_function.SelectedItem?.ToString(), "Function", cb_roles_fun.Checked),
-                () => LoadGrantRoles(cmb_roles.SelectedItem?.ToString()));
-        }
-
-        private void cb_user_pk_Click(object sender, EventArgs e)
-        {
-            HandleCheckboxClick(cb_user_pk, () =>
-                GrantRevokeExecute(cmb_username.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_package.SelectedItem?.ToString(), "Package", cb_user_pk.Checked),
-                () => LoadGrantUser(cmb_username.SelectedItem?.ToString()));
-        }
-        private void cb_roles_pk_Click(object sender, EventArgs e)
-        {
-            HandleCheckboxClick(cb_roles_pk,
-                () => GrantRevokeExecute(
-                    cmb_roles.SelectedItem?.ToString(),
-                    cmb_user.SelectedItem?.ToString(),
-                    cmb_package.SelectedItem?.ToString(),
-                    "Package",
-                    cb_roles_pk.Checked),
-                () => LoadGrantRoles(cmb_roles.SelectedItem?.ToString()));
-        }
-
-
-
-        private void cb_select_us_Click(object sender, EventArgs e)
-        {
-            HandleCheckboxClick(cb_select_us, () =>
-                GrantRevokeTable(cmb_username.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_table.SelectedItem?.ToString(), "Select", cb_select_us.Checked),
-                UpdateUserCheckboxColors);
-        }
-
-        private void cb_insert_us_Click(object sender, EventArgs e)
-        {
-            HandleCheckboxClick(cb_insert_us, () =>
-                GrantRevokeTable(cmb_username.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_table.SelectedItem?.ToString(), "Insert", cb_insert_us.Checked),
-                UpdateUserCheckboxColors);
-        }
-
-        private void cb_update_us_Click(object sender, EventArgs e)
-        {
-            HandleCheckboxClick(cb_update_us, () =>
-                GrantRevokeTable(cmb_username.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_table.SelectedItem?.ToString(), "Update", cb_update_us.Checked),
-                UpdateUserCheckboxColors);
-        }
-
-        private void cb_delete_us_Click(object sender, EventArgs e)
-        {
-            HandleCheckboxClick(cb_delete_us, () =>
-                GrantRevokeTable(cmb_username.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_table.SelectedItem?.ToString(), "Delete", cb_delete_us.Checked),
-                UpdateUserCheckboxColors);
-        }
-
-        private void cb_select_ro_Click(object sender, EventArgs e)
-        {
-            HandleCheckboxClick(cb_select_ro, () =>
-                GrantRevokeTable(cmb_roles.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_table.SelectedItem?.ToString(), "Select", cb_select_ro.Checked),
-                UpdateRoleCheckboxColors);
-        }
-
-
-        private void cb_insert_ro_Click(object sender, EventArgs e)
-        {
-            HandleCheckboxClick(cb_insert_ro, () =>
-                GrantRevokeTable(cmb_roles.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_table.SelectedItem?.ToString(), "Insert", cb_insert_ro.Checked),
-                UpdateRoleCheckboxColors);
-        }
-
-        private void cb_update_ro_Click(object sender, EventArgs e)
-        {
-            HandleCheckboxClick(cb_update_ro, () =>
-                GrantRevokeTable(cmb_roles.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_table.SelectedItem?.ToString(), "Update", cb_update_ro.Checked),
-                UpdateRoleCheckboxColors);
-        }
-
-        private void cb_delete_ro_Click(object sender, EventArgs e)
-        {
-            HandleCheckboxClick(cb_delete_ro, () =>
-                GrantRevokeTable(cmb_roles.SelectedItem?.ToString(), cmb_user.SelectedItem?.ToString(), cmb_table.SelectedItem?.ToString(), "Delete", cb_delete_ro.Checked),
-                UpdateRoleCheckboxColors);
+            Grant_Revoke_Pro_Role(cmb_function, cb_roles_fun, "Function");
         }
 
         private bool isProgrammaticChange = false;
 
-        private void HandleCheckboxClick(CheckBox cb, Func<bool> grantAction, Action onSuccess)
+        private async void cb_user_pk_Click(object sender, EventArgs e)
         {
-            if (isProgrammaticChange) return;
+            if (isProgrammaticChange || cb_user_pk.Enabled == false)
+                return;
 
-            bool original = cb.Checked;
-            bool result = grantAction();
+            var ckb = cb_user_pk;
+            string procedure = cmb_package.SelectedItem?.ToString() ?? "";
+            string user = cmb_username.SelectedItem?.ToString() ?? "";
+            string schema = cmb_user.SelectedItem?.ToString() ?? "";
+            bool isGrant = ckb.Checked;
 
-            if (!result)
+            ckb.Enabled = false;
+
+            try
             {
-                isProgrammaticChange = true;
-                cb.Checked = !original;
-                isProgrammaticChange = false;
+                bool success = await Task.Run(() =>
+                {
+                    return p.Grant_Revoke_Pro(user, schema, procedure, "Execute", isGrant ? 1 : 0);
+                });
+
+                if (success)
+                {
+                    MessageBox.Show(isGrant ? "Gán quyền thành công" : "Thu hồi quyền thành công");
+                    Set_Color_Grant_User();
+                    Load_Grant_User(user);
+                }
+                else
+                {
+                    // rollback trạng thái checkbox và chặn loop
+                    isProgrammaticChange = true;
+                    ckb.Checked = !isGrant;
+                    isProgrammaticChange = false;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                onSuccess();
+                MessageBox.Show("Lỗi xử lý: " + ex.Message);
+            }
+            finally
+            {
+                ckb.Enabled = true;
             }
         }
 
+
+
+
+
+        private void cb_roles_pk_Click(object sender, EventArgs e)
+        {
+            Grant_Revoke_Pro_Role(cmb_package, cb_roles_pk, "Package");
+        }
+        private void cb_select_us_Click(object sender, EventArgs e)
+        {
+            Grant_Revoke_Table_User(cb_select_us, "Select");
+        }
+
+        private void cb_insert_us_Click(object sender, EventArgs e)
+        {
+            Grant_Revoke_Table_User(cb_insert_us, "Insert");
+        }
+
+        private void cb_update_us_Click(object sender, EventArgs e)
+        {
+            Grant_Revoke_Table_User(cb_update_us, "Update");
+        }
+
+        private void cb_delete_us_Click(object sender, EventArgs e)
+        {
+            Grant_Revoke_Table_User(cb_delete_us, "Delete");
+        }
+
+
+        private void cb_select_ro_Click(object sender, EventArgs e)
+        {
+            Grant_Revoke_Table_Role(cb_select_ro, "Select");
+        }
+
+        private void cb_insert_ro_Click(object sender, EventArgs e)
+        {
+            Grant_Revoke_Table_Role(cb_insert_ro, "Insert");
+        }
+
+        private void cb_update_ro_Click(object sender, EventArgs e)
+        {
+            Grant_Revoke_Table_Role(cb_update_ro, "Update");
+        }
+
+        private void cb_delete_ro_Click(object sender, EventArgs e)
+        {
+            Grant_Revoke_Table_Role(cb_delete_ro, "Delete");
+        }
+        private bool Grant_Revoke_Role(string user, string role, int dk)
+        {
+            // Kiểm tra dữ liệu đầu vào
+            if (string.IsNullOrWhiteSpace(user))
+            {
+                MessageBox.Show("Mục User trống!!");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(role))
+            {
+                MessageBox.Show("Mục Role trống!!");
+                return false;
+            }
+            string action = dk == 1 ? "gán" : "gỡ";
+            string message = $"Bạn muốn {action} User: {user} {(dk == 1 ? "vào" : "ra khỏi")} Role: {role} không?";
+            DialogResult res = MessageBox.Show(message, "Thông báo", MessageBoxButtons.YesNo);
+
+            if (res == DialogResult.Yes)
+            {
+                if (p.Grant_Revoke_Role(user, role, dk))
+                {
+                    MessageBox.Show(dk == 1 ? "Gán nhóm quyền thành công" : "Thu hồi nhóm quyền thành công");
+                    return true;
+                }
+                return false;
+            }
+
+            return false;
+        }
 
         private void btn_Grant_Revoke_Role_Click(object sender, EventArgs e)
         {
-            string user = cmb_username.SelectedItem.ToString();
-            string role = cmb_roles.SelectedItem.ToString();
+            string user = cmb_username.SelectedItem?.ToString() ?? "";
+            string role = cmb_roles.SelectedItem?.ToString() ?? "";
+            bool isGrant = btn_Grant_Revoke_Role.Text.Equals("Grant", StringComparison.OrdinalIgnoreCase);
+            int dk = isGrant ? 1 : 0;
 
-            bool grant = btn_Grant_Revoke_Role.Text == "Grant Role";
-
-            if (GrantRevokeUserRole(user, role, grant))
+            if (Grant_Revoke_Role(user, role, dk))
             {
-                LoadRolesUser(user);
-                UpdateGrantRevokeRoleButtonText(user, role);
+                Set_Text_Button(user, role); 
+                Load_Roles_User(user); 
             }
         }
+
 
         private void btn_Grant_Login_Click(object sender, EventArgs e)
         {
@@ -563,7 +805,7 @@ namespace QuanLyNganHang.Forms
 
             if (confirm == DialogResult.Yes)
             {
-                if (_authService.GrantLogin(user))
+                if (p.GrantLogin(user))
                     MessageBox.Show("Cấp quyền CREATE SESSION thành công.");
             }
         }
@@ -581,7 +823,7 @@ namespace QuanLyNganHang.Forms
 
             if (confirm == DialogResult.Yes)
             {
-                if (_authService.RevokeLogin(user))
+                if (p.RevokeLogin(user))
                     MessageBox.Show("Đã thu hồi quyền CREATE SESSION thành công.");
             }
         }
@@ -600,7 +842,7 @@ namespace QuanLyNganHang.Forms
 
             if (result == DialogResult.Yes)
             {
-                bool success = _authService.GrantAllTables(username);
+                bool success = p.GrantAllTables(username);
 
                 if (success)
                     MessageBox.Show("Đã cấp quyền thành công!");
@@ -609,6 +851,9 @@ namespace QuanLyNganHang.Forms
             }
         }
 
+        private void cmb_user_SelectedIndexChanged_1(object sender, EventArgs e)
+        {
 
+        }
     }
 }

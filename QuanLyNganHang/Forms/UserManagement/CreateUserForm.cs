@@ -15,8 +15,9 @@ namespace QuanLyNganHang.Forms.UserManagement
 
         public CreateUserForm()
         {
-            CenterToScreen();
+            
             InitializeComponent();
+            CenterToScreen();
             u = new Create_User();
             employeeDataAccess = new EmployeeDataAccess();
             roleDataAccess = new RoleDataAccess();
@@ -139,9 +140,19 @@ namespace QuanLyNganHang.Forms.UserManagement
             cb_role.DisplayMember = "role_name";
             cb_role.ValueMember = "role_id";
             var branches = branchDataAccess.GetAllBranches();
+            branches.Columns.Add("display", typeof(string));
+
+            foreach (DataRow row in branches.Rows)
+            {
+                string name = row["branch_name"].ToString();
+                string code = row["branch_code"].ToString();
+                row["display"] = $"{name} ({code})"; 
+            }
+
             cb_branch.DataSource = branches;
-            cb_branch.DisplayMember = "branch_name"; 
+            cb_branch.DisplayMember = "display";
             cb_branch.ValueMember = "branch_id";
+
         }
 
     }

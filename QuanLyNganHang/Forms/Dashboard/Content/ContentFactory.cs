@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
 
 namespace QuanLyNganHang.Forms.Dashboard.Content
 {
@@ -28,8 +22,8 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                     return new AuditLogContent(contentPanel);
                 case "Reports":
                     return new ReportsContent(contentPanel);
-                case "Settings":
-                    return new SettingsContent(contentPanel);
+                case "ProfileManagement":
+                    return new ProfileManagementContent(contentPanel);
                default:
                    return new UserManagementContent(contentPanel);
             }
