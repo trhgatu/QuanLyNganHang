@@ -1,6 +1,7 @@
-﻿using System;
+﻿using Oracle.ManagedDataAccess.Client;
+using Oracle.ManagedDataAccess.Types;
+using System;
 using System.Data;
-using Oracle.ManagedDataAccess.Client;
 
 namespace QuanLyNganHang.DataAccess
 {
@@ -9,23 +10,45 @@ namespace QuanLyNganHang.DataAccess
 
         public DataTable GetAllRoles()
         {
-            var connection = Database.Get_Connect();
-
-            if (connection.State != ConnectionState.Open)
-                connection.Open();
-
-            string query = "SELECT role_id, role_name FROM ADMIN_NGANHANG.roles WHERE status = 1";
-
-            using (OracleCommand cmd = new OracleCommand(query, connection))
+            try
             {
-                using (OracleDataAdapter adapter = new OracleDataAdapter(cmd))
+                using (var conn = Database.Get_Connect())
                 {
-                    DataTable table = new DataTable();
-                    adapter.Fill(table);
-                    return table;
+                    string procedure = "ADMIN_NGANHANG.pkg_Role.pro_get_all_roles";
+
+                    using (OracleCommand cmd = new OracleCommand(procedure, conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        OracleParameter resultParam = new OracleParameter
+                        {
+                            ParameterName = "Result",
+                            OracleDbType = OracleDbType.RefCursor,
+                            Direction = ParameterDirection.Output
+                        };
+
+                        cmd.Parameters.Add(resultParam);
+
+                        cmd.ExecuteNonQuery();
+                        if (resultParam.Value != DBNull.Value && resultParam.Value is OracleRefCursor cursor)
+                        {
+                            using (var reader = cursor.GetDataReader())
+                            {
+                                DataTable table = new DataTable();
+                                table.Load(reader);
+                                return table;
+                            }
+                        }
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                System.Windows.Forms.MessageBox.Show("Lỗi gọi thủ tục: pro_get_all_roles\n" + ex.Message);
+            }
+            return null;
         }
+
 
         public bool AssignRoleToEmployee(int employeeId, int roleId)
         {

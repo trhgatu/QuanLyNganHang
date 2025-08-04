@@ -1,4 +1,5 @@
 ﻿using Oracle.ManagedDataAccess.Client;
+using QuanLyNganHang.Core;
 using QuanLyNganHang.Forms.Login;
 using System;
 using System.Collections.Generic;
@@ -225,7 +226,7 @@ namespace QuanLyNganHang
                 if (loginValidator.AttemptLogin(host, port, sid, user, pass))
                 {
                     OracleConnection c = Database.Get_Connect();
-
+                    SessionContext.OracleUser = user.Trim().ToUpper();
                     if (chk_RememberMe.Checked)
                     {
                         settingsManager.SaveLoginCredentials(user);
@@ -237,7 +238,6 @@ namespace QuanLyNganHang
                     this.Hide();
                     DashboardForm dashboardForm = new DashboardForm();
                     dashboardForm.ShowDialog();
-                   // Database.Close_Connect();
                     this.Close();
                 }
                 else

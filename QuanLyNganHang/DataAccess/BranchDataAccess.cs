@@ -1,10 +1,12 @@
-﻿using System;
+﻿using Oracle.ManagedDataAccess.Client;
+using Oracle.ManagedDataAccess.Types;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Oracle.ManagedDataAccess.Client;
+using System.Windows.Forms;
 
 namespace QuanLyNganHang.DataAccess
 {
@@ -12,19 +14,44 @@ namespace QuanLyNganHang.DataAccess
     {
         public DataTable GetAllBranches()
         {
-            using (var conn = Database.Get_Connect())
+            try
             {
-                string query = "SELECT branch_id, branch_name, branch_code FROM ADMIN_NGANHANG.branches WHERE status = 1";
-
-                using (var cmd = new OracleCommand(query, conn))
-                using (var adapter = new OracleDataAdapter(cmd))
+                using (var conn = Database.Get_Connect())
                 {
-                    DataTable dt = new DataTable();
-                    adapter.Fill(dt);
-                    return dt;
+                    string procedure = "ADMIN_NGANHANG.pkg_Branch.pro_get_all_branches";
+
+                    using (OracleCommand cmd = new OracleCommand(procedure, conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        OracleParameter resultParam = new OracleParameter
+                        {
+                            ParameterName = "Result",
+                            OracleDbType = OracleDbType.RefCursor,
+                            Direction = ParameterDirection.Output
+                        };
+
+                        cmd.Parameters.Add(resultParam);
+
+                        cmd.ExecuteNonQuery();
+
+                        if (resultParam.Value != DBNull.Value && resultParam.Value is OracleRefCursor cursor)
+                        {
+                            using (var reader = cursor.GetDataReader())
+                            {
+                                DataTable dt = new DataTable();
+                                dt.Load(reader);
+                                return dt;
+                            }
+                        }
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi gọi thủ tục: pro_get_all_branches\n" + ex.Message);
+            }
+            return null;
         }
-
     }
 }

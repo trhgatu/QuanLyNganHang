@@ -29,38 +29,49 @@ namespace QuanLyNganHang
             this.BackColor = DashboardConstants.Colors.Background;
 
             headerManager = new HeaderManager();
-            var (
+            try
+            {
+                var (
     fullName, roleName, employeeId, position,
     email, oracleUser, phone, address,
     branchId, branchCode, branchName, branchAddress, branchPhone,
     bankId, bankCode, bankName, bankAddress, bankPhone, bankEmail
-) = EmployeeDataAccess.GetProfileFull();
+) = EmployeeDataAccess.GetProfileFull(SessionContext.OracleUser);
+                SessionContext.FullName = fullName;
+                SessionContext.RoleName = roleName;
+                SessionContext.EmployeeId = employeeId;
+                SessionContext.Position = position;
+                SessionContext.Email = email;
+                SessionContext.OracleUser = oracleUser;
+                SessionContext.Phone = phone;
+                SessionContext.Address = address;
+
+                SessionContext.BranchId = branchId;
+                SessionContext.BranchCode = branchCode;
+                SessionContext.BranchName = branchName;
+                SessionContext.BranchAddress = branchAddress;
+                SessionContext.BranchPhone = branchPhone;
+
+                SessionContext.BankId = bankId;
+                SessionContext.BankCode = bankCode;
+                SessionContext.BankName = bankName;
+                SessionContext.BankAddress = bankAddress;
+                SessionContext.BankPhone = bankPhone;
+                SessionContext.BankEmail = bankEmail;
+
+                var headerPanel = headerManager.CreateHeader(this, fullName, roleName);
+                this.Controls.Add(headerPanel);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Không thể lấy thông tin profile user.\n" + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                this.Close();
+                return;
+            }
 
 
-            SessionContext.FullName = fullName;
-            SessionContext.RoleName = roleName;
-            SessionContext.EmployeeId = employeeId;
-            SessionContext.Position = position;
-            SessionContext.Email = email;
-            SessionContext.OracleUser = oracleUser;
-            SessionContext.Phone = phone;
-            SessionContext.Address = address;
-
-            SessionContext.BranchId = branchId;
-            SessionContext.BranchCode = branchCode;
-            SessionContext.BranchName = branchName;
-            SessionContext.BranchAddress = branchAddress;
-            SessionContext.BranchPhone = branchPhone;
-
-            SessionContext.BankId = bankId;
-            SessionContext.BankCode = bankCode;
-            SessionContext.BankName = bankName;
-            SessionContext.BankAddress = bankAddress;
-            SessionContext.BankPhone = bankPhone;
-            SessionContext.BankEmail = bankEmail;
-
-            var headerPanel = headerManager.CreateHeader(this, fullName, roleName);
-            this.Controls.Add(headerPanel);
+           
+            
             menuManager = new MenuManager();
             contentManager = new ContentManager();
             CreateMenu();

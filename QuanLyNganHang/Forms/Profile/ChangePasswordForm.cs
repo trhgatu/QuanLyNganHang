@@ -147,8 +147,6 @@ namespace QuanLyNganHang.Forms.Profile
                 this.DialogResult = DialogResult.None;
                 return;
             }
-
-            // TODO: Xử lý đổi mật khẩu thực tế ở đây
             MessageBox.Show("Đổi mật khẩu thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
     }

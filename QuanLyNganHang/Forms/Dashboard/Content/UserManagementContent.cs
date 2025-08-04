@@ -213,10 +213,6 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                 ShowInfo("Vui lòng chọn một người dùng để xóa!");
             }
         }
-
-
-
-        // Action methods
         private void ShowAddEmployeeForm()
         {
             try

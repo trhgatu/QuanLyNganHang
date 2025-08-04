@@ -14,7 +14,7 @@ namespace QuanLyNganHang.DataAccess
             {
                 using (var conn = Database.Get_Connect())
                 {
-                    string procedure = "pkg_PhanQuyen.pro_select_user";
+                    string procedure = "ADMIN_NGANHANG.pkg_PhanQuyen.pro_select_user";
 
                     using (OracleCommand cmd = new OracleCommand(procedure, conn))
                     {
@@ -58,7 +58,7 @@ namespace QuanLyNganHang.DataAccess
             {
                 using (var conn = Database.Get_Connect())
                 {
-                    string procedure = "pkg_PhanQuyen.pro_select_roles";
+                    string procedure = "ADMIN_NGANHANG.pkg_PhanQuyen.pro_select_roles";
 
                     using (OracleCommand cmd = new OracleCommand(procedure, conn))
                     {
@@ -99,7 +99,7 @@ namespace QuanLyNganHang.DataAccess
             {
                 using (var conn = Database.Get_Connect())
                 {
-                    string procedure = "pkg_PhanQuyen.pro_select_procedure_user";
+                    string procedure = "ADMIN_NGANHANG.pkg_PhanQuyen.pro_select_procedure_user";
 
                     using (OracleCommand cmd = new OracleCommand(procedure, conn))
                     {
@@ -157,7 +157,7 @@ namespace QuanLyNganHang.DataAccess
             {
                 using (var conn = Database.Get_Connect())
                 {
-                    string procedure = "pkg_PhanQuyen.pro_select_table";
+                    string procedure = "ADMIN_NGANHANG.pkg_PhanQuyen.pro_select_table";
 
                     using (OracleCommand cmd = new OracleCommand(procedure, conn))
                     {
@@ -205,7 +205,7 @@ namespace QuanLyNganHang.DataAccess
             {
                 using (var conn = Database.Get_Connect())
                 {
-                    string procedure = "pkg_PhanQuyen.pro_user_roles";
+                    string procedure = "ADMIN_NGANHANG.pkg_PhanQuyen.pro_user_roles";
                     using (OracleCommand cmd = new OracleCommand(procedure, conn))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
@@ -250,7 +250,7 @@ namespace QuanLyNganHang.DataAccess
             {
                 using (var conn = Database.Get_Connect())
                 {
-                    string procedure = "pkg_PhanQuyen.pro_user_roles_check";
+                    string procedure = "ADMIN_NGANHANG.pkg_PhanQuyen.pro_user_roles_check";
                     using (OracleCommand cmd = new OracleCommand(procedure, conn))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
@@ -282,7 +282,7 @@ namespace QuanLyNganHang.DataAccess
             {
                 using (var conn = Database.Get_Connect())
                 {
-                    string procedure = "pkg_PhanQuyen.pro_select_grant_user";
+                    string procedure = "ADMIN_NGANHANG.pkg_PhanQuyen.pro_select_grant_user";
                     using (OracleCommand cmd = new OracleCommand(procedure, conn))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
@@ -324,7 +324,7 @@ namespace QuanLyNganHang.DataAccess
             {
                 using (var conn = Database.Get_Connect())
                 {
-                    string procedure = "pkg_PhanQuyen.pro_select_grant";
+                    string procedure = "ADMIN_NGANHANG.pkg_PhanQuyen.pro_select_grant";
                     using (OracleCommand cmd = new OracleCommand(procedure, conn))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
@@ -373,7 +373,7 @@ namespace QuanLyNganHang.DataAccess
             {
                 using (var conn = Database.Get_Connect())
                 {
-                    string procedure = "pkg_PhanQuyen.pro_grant_revoke";
+                    string procedure = "ADMIN_NGANHANG.pkg_PhanQuyen.pro_grant_revoke";
 
                     OracleCommand cmd = new OracleCommand(procedure, conn);
                     cmd.CommandType = CommandType.StoredProcedure;
@@ -403,7 +403,7 @@ namespace QuanLyNganHang.DataAccess
             {
                 using (var conn = Database.Get_Connect())
                 {
-                    string procedure = "pkg_PhanQuyen.pro_grant_revoke_roles";
+                    string procedure = "ADMIN_NGANHANG.pkg_PhanQuyen.pro_grant_revoke_roles";
 
                     OracleCommand cmd = new OracleCommand();
                     cmd.Connection = conn;
@@ -448,7 +448,7 @@ namespace QuanLyNganHang.DataAccess
             try
             {
                 using (var conn = Database.Get_Connect())
-                using (var cmd = new OracleCommand("pkg_PhanQuyen.pro_grant_login", conn))
+                using (var cmd = new OracleCommand("ADMIN_NGANHANG.pkg_PhanQuyen.pro_grant_login", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.BindByName = true;
@@ -470,7 +470,7 @@ namespace QuanLyNganHang.DataAccess
             try
             {
                 using (var conn = Database.Get_Connect())
-                using (var cmd = new OracleCommand("pkg_PhanQuyen.pro_revoke_login", conn))
+                using (var cmd = new OracleCommand("ADMIN_NGANHANG.pkg_PhanQuyen.pro_revoke_login", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.BindByName = true;
@@ -494,7 +494,7 @@ namespace QuanLyNganHang.DataAccess
             {
                 using (var conn = Database.Get_Connect())
                 {
-                    var cmd = new OracleCommand("pkg_PhanQuyen.pro_grant_all_tables", conn);
+                    var cmd = new OracleCommand("ADMIN_NGANHANG.pkg_PhanQuyen.pro_grant_all_tables", conn);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add("p_username", OracleDbType.Varchar2).Value = username.ToUpper();
                     cmd.ExecuteNonQuery();

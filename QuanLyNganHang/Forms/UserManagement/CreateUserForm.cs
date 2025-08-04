@@ -27,111 +27,103 @@ namespace QuanLyNganHang.Forms.UserManagement
 
         private void btn_createuser_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(txt_username.Text))
+            if (string.IsNullOrWhiteSpace(txt_username.Text) ||
+                string.IsNullOrWhiteSpace(txt_password.Text) ||
+                string.IsNullOrWhiteSpace(txt_fullname.Text) ||
+                cb_role.SelectedItem == null || cb_branch.SelectedItem == null)
             {
-                MessageBox.Show("Chưa điền tên đăng nhập!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                txt_username.Focus();
-                return;
-            }
-            if (string.IsNullOrWhiteSpace(txt_password.Text))
-            {
-                MessageBox.Show("Chưa điền mật khẩu!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                txt_password.Focus();
-                return;
-            }
-            if (string.IsNullOrWhiteSpace(txt_fullname.Text))
-            {
-                MessageBox.Show("Chưa điền họ tên!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                txt_fullname.Focus();
-                return;
-            }
-            if (cb_role.SelectedItem == null || cb_branch.SelectedItem == null)
-            {
-                MessageBox.Show("Vui lòng chọn chi nhánh và vai trò!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Vui lòng nhập đầy đủ thông tin, chọn chi nhánh và vai trò!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
             string username = txt_username.Text.Trim().ToUpper();
             string password = txt_password.Text.Trim();
             string fullName = txt_fullname.Text.Trim();
+            string address = txt_address.Text.Trim();
             string email = txt_email.Text.Trim();
             string phone = txt_phone.Text.Trim();
             string position = txt_position.Text.Trim();
             int branchId = Convert.ToInt32(cb_branch.SelectedValue);
             int roleId = Convert.ToInt32(cb_role.SelectedValue);
-            int check = u.Pro_CheckUser(username);
-            bool oracleSuccess = false;
 
-            if (check == 0)
+            using (var conn = Database.Get_Connect())
             {
-                oracleSuccess = u.Pro_CreateUser(username, password);
-                if (!oracleSuccess)
+                using (var tran = conn.BeginTransaction())
                 {
-                    MessageBox.Show("Tạo user Oracle thất bại!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-                else
-                {
-                    MessageBox.Show("Tạo user Oracle thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-            }
-            else if (check == 1)
-            {
-                DialogResult res = MessageBox.Show($"User {username} đã tồn tại. Có muốn đổi mật khẩu?", "Xác nhận", MessageBoxButtons.YesNo);
-                if (res == DialogResult.Yes)
-                {
-                    oracleSuccess = u.Pro_CreateUser(username, password);
-                    if (oracleSuccess)
+                    try
                     {
-                        MessageBox.Show("Đổi mật khẩu Oracle thành công");
-                        Database.Set_Database(Database.Host, Database.Port, Database.Sid, username, password);
-                        Database.Connect();
+                        int check = u.Pro_CheckUser(conn, tran, username);
+
+                        bool oracleSuccess = false;
+
+                        if (check == 0)
+                        {
+                            oracleSuccess = u.Pro_CreateUser(conn, tran, username, password);
+                            if (!oracleSuccess)
+                            {
+                                MessageBox.Show("Tạo USER Oracle thất bại!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                tran.Rollback();
+                                return;
+                            }
+                            else
+                            {
+                                MessageBox.Show("Tạo USER Oracle thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            }
+                        }
+                        else if (check == 1)
+                        {
+                            DialogResult res = MessageBox.Show($"User {username} đã tồn tại. Có muốn đổi mật khẩu?", "Xác nhận", MessageBoxButtons.YesNo);
+                            if (res == DialogResult.Yes)
+                            {
+                                oracleSuccess = u.Pro_CreateUser(conn, tran, username, password);
+                                if (oracleSuccess)
+                                {
+                                    MessageBox.Show("Đổi mật khẩu Oracle thành công");
+                                }
+                                else
+                                {
+                                    MessageBox.Show("Đổi mật khẩu Oracle thất bại");
+                                    tran.Rollback();
+                                    return;
+                                }
+                            }
+                            else
+                            {
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            MessageBox.Show("Lỗi không xác định khi kiểm tra user Oracle.");
+                            tran.Rollback();
+                            return;
+                        }
+
+                        string passwordHash = HashHelper.HashPassword(password);
+                        var (created, errorMsg) = EmployeeDataAccess.CreateFullUser(conn, tran,
+                            fullName, email, phone, address, position, branchId, username, passwordHash, roleId);
+
+                        if (created)
+                        {
+                            tran.Commit();
+                            MessageBox.Show("Tạo tài khoản thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        else
+                        {
+                            tran.Rollback();
+                            MessageBox.Show("Tạo tài khoản thất bại: " + errorMsg, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        MessageBox.Show("Đổi mật khẩu Oracle thất bại");
-                        return;
+                        tran.Rollback();
+                        MessageBox.Show("Lỗi CỤ THỂ khi tạo user:\n" + ex.ToString(), "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
-                else
-                {
-                    return;
-                }
-            }
-            else
-            {
-                MessageBox.Show("Lỗi không xác định khi kiểm tra user Oracle.");
-                return;
-            }
-
-            try
-            {
-                if (EmployeeDataAccess.UsernameExists(username, Database.Get_Connect()))
-                {
-                    MessageBox.Show("Username đã tồn tại trong hệ thống.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                bool created = EmployeeDataAccess.CreateFullUser(
-                    fullName, email, phone, "", position, branchId, username, password, roleId
-                );
-
-                if (created)
-                {
-                    MessageBox.Show("Tạo tài khoản thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                else
-                {
-                    MessageBox.Show("Tạo tài khoản thất bại!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-
-                MessageBox.Show("Đăng ký user và gán role thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi khi lưu dữ liệu người dùng vào hệ thống: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+
 
         private void LoadComboBoxData()
         {

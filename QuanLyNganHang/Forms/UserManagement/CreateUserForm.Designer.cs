@@ -61,15 +61,15 @@ namespace QuanLyNganHang.Forms.UserManagement
             };
             this.Controls.Add(infoBox);
 
-            // Input fields
             string[] labels = {
-        "Tên đăng nhập:", "Mật khẩu:", "Họ tên:", "Email:",
+        "Tên đăng nhập:", "Mật khẩu:", "Họ tên:", "Email:", "Địa chỉ:",
         "Số điện thoại:", "Vị trí:", "Vai trò:", "Chi nhánh:"
     };
             Control[] inputs = {
         txt_username = new TextBox(),
         txt_password = new TextBox() { UseSystemPasswordChar = true },
         txt_fullname = new TextBox(),
+        txt_address = new TextBox(),
         txt_email = new TextBox(),
         txt_phone = new TextBox(),
         txt_position = new TextBox(),
@@ -119,6 +119,7 @@ namespace QuanLyNganHang.Forms.UserManagement
         private System.Windows.Forms.TextBox txt_password;
         private System.Windows.Forms.Button btn_createuser;
         private System.Windows.Forms.TextBox txt_fullname;
+        private System.Windows.Forms.TextBox txt_address;
         private System.Windows.Forms.Label lbl_fullname;
         private System.Windows.Forms.ComboBox cb_role;
         private System.Windows.Forms.ComboBox cb_branch;
