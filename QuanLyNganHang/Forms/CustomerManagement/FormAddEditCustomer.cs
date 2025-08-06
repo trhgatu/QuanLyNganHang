@@ -2,6 +2,7 @@
 using Oracle.ManagedDataAccess.Client;
 using QuanLyNganHang.DataAccess;
 using QuanLyNganHang.Helpers;
+using QuanLyNganHang.Tools;
 using System;
 using System.Data;
 using System.Drawing;
@@ -14,10 +15,9 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
     public class FormAddEditCustomer : Form
     {
         private CustomerDataAccess customerDataAccess;
-
         private TextBox txtFullName, txtIDCard, txtPhone, txtEmail, txtAddress;
         private ComboBox cbStatus;
-        private Button btnSave, btnCancel;
+        private Button btnSave, btnCancel, btnCheckEncrypt;
         private Label lblCustomerCode;
 
         private bool isEditMode;
@@ -25,12 +25,13 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
 
         public FormAddEditCustomer(bool editMode = false, string id = null)
         {
-            this.Text = editMode ? "Sửa khách hàng" : "Thêm khách hàng mới";
-            this.Size = new Size(520, 520);
-            this.StartPosition = FormStartPosition.CenterParent;
-            this.FormBorderStyle = FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-            this.BackColor = Color.White;
+            Text = editMode ? "Sửa khách hàng" : "Thêm khách hàng mới";
+            Size = new Size(520, 560);
+            StartPosition = FormStartPosition.CenterParent;
+            FormBorderStyle = FormBorderStyle.FixedDialog;
+            MaximizeBox = false;
+            BackColor = Color.White;
+
             customerDataAccess = new CustomerDataAccess();
             isEditMode = editMode;
             customerId = id;
@@ -43,8 +44,7 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
             }
             else
             {
-                string newCustomerCode = "KH" + DateTime.Now.ToString("yyyyMMddHHmmss");
-                lblCustomerCode.Text = newCustomerCode;
+                lblCustomerCode.Text = "KH" + DateTime.Now.ToString("yyyyMMddHHmmss");
             }
         }
 
@@ -64,7 +64,7 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                 Top = 20,
                 Padding = new Padding(10)
             };
-            this.Controls.Add(groupBox);
+            Controls.Add(groupBox);
 
             void AddControl(string labelText, Control control)
             {
@@ -114,7 +114,7 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                 Text = "📂 Lưu",
                 Width = 120,
                 Height = 40,
-                Left = 100,
+                Left = 60,
                 Top = groupBox.Bottom + 20,
                 BackColor = Color.DodgerBlue,
                 ForeColor = Color.White,
@@ -129,7 +129,7 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                 Text = "❌ Hủy",
                 Width = 120,
                 Height = 40,
-                Left = 260,
+                Left = 200,
                 Top = groupBox.Bottom + 20,
                 BackColor = Color.Gray,
                 ForeColor = Color.White,
@@ -139,8 +139,24 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
             btnCancel.FlatAppearance.BorderSize = 0;
             btnCancel.Click += (s, e) => this.Close();
 
+            btnCheckEncrypt = new Button()
+            {
+                Text = "🧪 Kiểm tra mã hóa",
+                Width = 160,
+                Height = 40,
+                Left = 340,
+                Top = groupBox.Bottom + 20,
+                BackColor = Color.OrangeRed,
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI Semibold", 9F),
+                FlatStyle = FlatStyle.Flat
+            };
+            btnCheckEncrypt.FlatAppearance.BorderSize = 0;
+            btnCheckEncrypt.Click += BtnCheckEncrypt_Click;
+
             Controls.Add(btnSave);
             Controls.Add(btnCancel);
+            Controls.Add(btnCheckEncrypt);
         }
 
         private void LoadCustomerData(string id)
@@ -152,10 +168,10 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                 {
                     lblCustomerCode.Text = row["customer_code"].ToString();
                     txtFullName.Text = row["full_name"].ToString();
-                    txtIDCard.Text = EncryptionHelper.DecryptRSA(row["id_number"].ToString());
-                    txtPhone.Text = EncryptionHelper.DecryptRSA(row["phone"].ToString());
-                    txtEmail.Text = EncryptionHelper.DecryptRSA(row["email"].ToString());
-                    txtAddress.Text = EncryptionHelper.DecryptRSA(row["address"].ToString());
+                    txtIDCard.Text = EncryptionHelper.DecryptHybrid(row["id_number"].ToString());
+                    txtPhone.Text = EncryptionHelper.DecryptHybrid(row["phone"].ToString());
+                    txtEmail.Text = EncryptionHelper.DecryptHybrid(row["email"].ToString());
+                    txtAddress.Text = EncryptionHelper.DecryptHybrid(row["address"].ToString());
                     cbStatus.SelectedIndex = row["status"].ToString() == "1" ? 0 : 1;
                 }
             }
@@ -165,55 +181,31 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
             }
         }
 
-
         private void btnSave_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(txtFullName.Text) ||
-                string.IsNullOrWhiteSpace(txtIDCard.Text) ||
-                string.IsNullOrWhiteSpace(txtPhone.Text) ||
-                string.IsNullOrWhiteSpace(txtEmail.Text) ||
-                string.IsNullOrWhiteSpace(txtAddress.Text))
-            {
-                MessageBox.Show("Vui lòng nhập đủ thông tin!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            if (!Regex.IsMatch(txtIDCard.Text, @"^\d{12}$"))
-            {
-                MessageBox.Show("CMND/CCCD phải có 12 số.", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            if (!Regex.IsMatch(txtPhone.Text, @"^\d{10}$"))
-            {
-                MessageBox.Show("Số điện thoại phải có 10 chữ số.", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            if (!Regex.IsMatch(txtEmail.Text, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
-            {
-                MessageBox.Show("Email không đúng định dạng.", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
             try
             {
                 string code = lblCustomerCode.Text;
+                string encryptedIDCard = EncryptionHelper.EncryptHybrid(txtIDCard.Text.Trim());
+                string encryptedPhone = EncryptionHelper.EncryptHybrid(txtPhone.Text.Trim());
+                string encryptedEmail = EncryptionHelper.EncryptHybrid(txtEmail.Text.Trim());
+                string encryptedAddress = EncryptionHelper.EncryptHybrid(txtAddress.Text.Trim());
+
                 bool result = customerDataAccess.SaveCustomer(
                     isEditMode,
                     code,
                     txtFullName.Text.Trim(),
-                    txtIDCard.Text.Trim(),
-                    txtPhone.Text.Trim(),
-                    txtEmail.Text.Trim(),
-                    txtAddress.Text.Trim(),
+                    encryptedIDCard,
+                    encryptedPhone,
+                    encryptedEmail,
+                    encryptedAddress,
                     cbStatus.SelectedIndex == 0 ? 1 : 0
                 );
 
                 if (result)
                 {
                     MessageBox.Show("Lưu thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    this.DialogResult = DialogResult.OK;
+                    DialogResult = DialogResult.OK;
                 }
                 else
                 {
@@ -226,5 +218,21 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
             }
         }
 
+        private void BtnCheckEncrypt_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                EncryptDebugger.TestEncryption("CMND", txtIDCard.Text.Trim());
+                EncryptDebugger.TestEncryption("Số điện thoại", txtPhone.Text.Trim());
+                EncryptDebugger.TestEncryption("Email", txtEmail.Text.Trim());
+                EncryptDebugger.TestEncryption("Địa chỉ", txtAddress.Text.Trim());
+
+                MessageBox.Show("✅ Kiểm tra mã hóa thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi kiểm tra mã hóa: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
     }
 }

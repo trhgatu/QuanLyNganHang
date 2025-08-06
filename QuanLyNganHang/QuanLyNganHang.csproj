@@ -84,14 +84,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Core\Helpers\AesEncryptor.cs" />
+    <Compile Include="Core\Helpers\EncryptDebugger.cs" />
     <Compile Include="Core\Helpers\EncryptionHelper.cs" />
     <Compile Include="Core\Helpers\HashHelper.cs" />
+    <Compile Include="Core\Helpers\HybridEncryptor.cs" />
+    <Compile Include="Core\Helpers\RsaEncryptor.cs" />
     <Compile Include="Core\SessionContext.cs" />
     <Compile Include="DataAccess\AccountDataAccess.cs" />
     <Compile Include="DataAccess\AuditLogDataAccess.cs" />
     <Compile Include="DataAccess\AuthorizationManager.cs" />
     <Compile Include="DataAccess\BranchDataAccess.cs" />
     <Compile Include="DataAccess\CustomerDataAccess.cs" />
+    <Compile Include="DataAccess\OLSDataAccess.cs" />
     <Compile Include="DataAccess\Prod\CreateUser.cs" />
     <Compile Include="DataAccess\Prod\DeleteUser.cs" />
     <Compile Include="DataAccess\EmployeeDataAccess.cs" />
@@ -106,6 +111,36 @@
     <Compile Include="Forms\AccountManagement\FormFreezeAccount.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Forms\Authorization\AuthorizationControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\Authorization\AuthorizationControl.Designer.cs">
+      <DependentUpon>AuthorizationControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Authorization\OLS\OLSForm.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\Authorization\OLS\OLSForm.Designer.cs">
+      <DependentUpon>OLSForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Authorization\OLS\UserControl_EnableDisablePolicy.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\Authorization\OLS\UserControl_EnableDisablePolicy.Designer.cs">
+      <DependentUpon>UserControl_EnableDisablePolicy.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Authorization\OLS\UserControl_LabelComponent.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\Authorization\OLS\UserControl_LabelComponent.Designer.cs">
+      <DependentUpon>UserControl_LabelComponent.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Authorization\OLS\UserControl_TaoPolicyGanQuyen.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\Authorization\OLS\UserControl_TaoPolicyGanQuyen.Designer.cs">
+      <DependentUpon>UserControl_TaoPolicyGanQuyen.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\CustomerManagement\FormAddEditCustomer.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -116,7 +151,7 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\Authorization\AuthorizationForm.cs">
-      <SubType>Form</SubType>
+      <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Forms\Authorization\AuthorizationForm.Designer.cs">
       <DependentUpon>AuthorizationForm.cs</DependentUpon>
@@ -125,6 +160,9 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\CustomerManagement\FormCustomerSearch.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\CustomerManagement\FormEncryptedDataViewer.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\CustomerManagement\FormSearchCustomerOpenAccount.cs">

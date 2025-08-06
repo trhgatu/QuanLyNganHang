@@ -10,6 +10,7 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
     public class FormCustomerDetails : Form
     {
         private Label lblFullName, lblIDCard, lblPhone, lblEmail, lblAddress;
+        private TextBox txtEncryptedInfo;
         private readonly string customerCode;
         private readonly CustomerDataAccess customerDataAccess;
 
@@ -18,15 +19,15 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
             this.customerCode = code;
             this.customerDataAccess = new CustomerDataAccess();
 
-            this.Text = $"Thông tin chi tiết - {code}";
-            this.Size = new Size(500, 400);
+            this.Text = $"Chi tiết khách hàng - {code}";
+            this.Size = new Size(600, 500);
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.BackColor = Color.White;
             this.MaximizeBox = false;
 
             InitUI();
-            LoadDecryptedData();
+            LoadCustomerData();
         }
 
         private void InitUI()
@@ -48,7 +49,7 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                 {
                     Left = 160,
                     Top = top,
-                    Width = 280,
+                    Width = 380,
                     Font = labelFont,
                     ForeColor = Color.DarkBlue
                 };
@@ -62,9 +63,32 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
             AddRow("Điện thoại:", ref lblPhone);
             AddRow("Email:", ref lblEmail);
             AddRow("Địa chỉ:", ref lblAddress);
+
+            Label lblEncrypted = new Label()
+            {
+                Text = "Dữ liệu đã mã hóa:",
+                Top = top + 10,
+                Left = 30,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                AutoSize = true
+            };
+            txtEncryptedInfo = new TextBox()
+            {
+                Multiline = true,
+                ScrollBars = ScrollBars.Vertical,
+                Left = 30,
+                Top = top + 40,
+                Width = 510,
+                Height = 150,
+                Font = new Font("Consolas", 9),
+                ReadOnly = true
+            };
+
+            this.Controls.Add(lblEncrypted);
+            this.Controls.Add(txtEncryptedInfo);
         }
 
-        private void LoadDecryptedData()
+        private void LoadCustomerData()
         {
             try
             {
@@ -80,6 +104,12 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                 lblPhone.Text = TryDecrypt(row["phone"]);
                 lblEmail.Text = TryDecrypt(row["email"]);
                 lblAddress.Text = TryDecrypt(row["address"]);
+
+                txtEncryptedInfo.Text =
+                    $"CMND:    {row["id_number"]}\r\n" +
+                    $"SĐT:      {row["phone"]}\r\n" +
+                    $"Email:    {row["email"]}\r\n" +
+                    $"Địa chỉ:  {row["address"]}";
             }
             catch (Exception ex)
             {
@@ -91,7 +121,7 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
         {
             try
             {
-                return EncryptionHelper.DecryptRSA(value?.ToString());
+                return EncryptionHelper.DecryptHybrid(value?.ToString());
             }
             catch
             {

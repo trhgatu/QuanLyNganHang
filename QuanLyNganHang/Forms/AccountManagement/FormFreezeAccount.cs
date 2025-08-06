@@ -16,6 +16,7 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
         private string selectedAccountId = null;
 
         private readonly AccountDataAccess accountDataAccess = new AccountDataAccess();
+        private readonly CustomerDataAccess customerDataAccess = new CustomerDataAccess();
 
         public FormFreezeAccount()
         {
@@ -115,8 +116,8 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
 
         private void BtnSearch_Click(object sender, EventArgs e)
         {
-            string input = txtSearch.Text.Trim();
-            if (string.IsNullOrEmpty(input))
+            string keyword = txtSearch.Text.Trim();
+            if (string.IsNullOrEmpty(keyword))
             {
                 MessageBox.Show("Vui lòng nhập CMND/CCCD hoặc SĐT.", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
@@ -124,8 +125,33 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
 
             try
             {
-                string encrypted = EncryptionHelper.EncryptRSA(input);
-                DataTable result = accountDataAccess.FindActiveAccountsByEncryptedInput(encrypted);
+                // Lấy danh sách khách hàng (dạng mã hóa gốc)
+                DataTable customers = customerDataAccess.GetRawCustomers();
+                string matchedCustomerId = null;
+
+                foreach (DataRow row in customers.Rows)
+                {
+                    string decryptedId = EncryptionHelper.TryDecryptHybrid(row["id_number"]?.ToString());
+                    string decryptedPhone = EncryptionHelper.TryDecryptHybrid(row["phone"]?.ToString());
+
+                    if (decryptedId == keyword || decryptedPhone == keyword)
+                    {
+                        matchedCustomerId = row["customer_id"].ToString();
+                        break;
+                    }
+                }
+
+                if (string.IsNullOrEmpty(matchedCustomerId))
+                {
+                    MessageBox.Show("Không tìm thấy khách hàng phù hợp.", "Kết quả", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    dgvAccounts.DataSource = null;
+                    btnFreeze.Enabled = false;
+                    selectedAccountId = null;
+                    return;
+                }
+
+                // ⚠️ Convert từ string sang int để truyền vào đúng kiểu hàm
+                DataTable result = accountDataAccess.GetActiveAccountsByCustomerId(Convert.ToInt32(matchedCustomerId));
 
                 if (result.Rows.Count == 0)
                 {
@@ -136,17 +162,24 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                     return;
                 }
 
+                foreach (DataRow row in result.Rows)
+                {
+                    row["phone"] = EncryptionHelper.TryDecryptHybrid(row["phone"]?.ToString());
+                    row["email"] = EncryptionHelper.TryDecryptHybrid(row["email"]?.ToString());
+                    row["address"] = EncryptionHelper.TryDecryptHybrid(row["address"]?.ToString());
+                    row["id_number"] = EncryptionHelper.TryDecryptHybrid(row["id_number"]?.ToString());
+                }
+
                 dgvAccounts.DataSource = result;
                 dgvAccounts.Columns["account_id"].Visible = false;
-                btnFreeze.Enabled = false;
                 selectedAccountId = null;
+                btnFreeze.Enabled = false;
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Lỗi tìm kiếm: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
 
         private void DgvAccounts_CellClick(object sender, DataGridViewCellEventArgs e)
         {
@@ -175,7 +208,7 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                 if (success)
                 {
                     MessageBox.Show("❄️ Đã đóng băng tài khoản thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    BtnSearch_Click(null, null);
+                    BtnSearch_Click(null, null); // refresh lại danh sách
                 }
                 else
                 {
@@ -187,6 +220,5 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                 MessageBox.Show("Lỗi khi đóng băng: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
     }
 }

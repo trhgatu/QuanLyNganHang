@@ -43,6 +43,13 @@ namespace QuanLyNganHang.DataAccess
         public DataTable GetAllCustomers()
         {
             DataTable dt = new DataTable();
+            dt.Columns.Add("Mã KH");
+            dt.Columns.Add("Họ tên");
+            dt.Columns.Add("CMND");
+            dt.Columns.Add("Điện thoại");
+            dt.Columns.Add("Email");
+            dt.Columns.Add("Địa chỉ");
+            dt.Columns.Add("Trạng thái");
 
             try
             {
@@ -51,25 +58,30 @@ namespace QuanLyNganHang.DataAccess
                     if (conn.State != ConnectionState.Open)
                         conn.Open();
 
-                    string sql = @"
-                        SELECT 
-                            customer_code AS ""Mã KH"",
-                            full_name AS ""Họ tên"",
-                            id_number AS ""CMND"",
-                            phone AS ""Điện thoại"",
-                            email AS ""Email"",
-                            address AS ""Địa chỉ"",
-                            CASE
-                                WHEN status = 1 THEN 'Hoạt động'
-                                ELSE 'Khóa'
-                            END AS ""Trạng thái""
-                        FROM ADMIN_NGANHANG.customers
-                        WHERE status = 1";
+                    string sql = "SELECT * FROM ADMIN_NGANHANG.customers WHERE status = 1";
 
                     using (var cmd = new OracleCommand(sql, conn))
-                    using (var adapter = new OracleDataAdapter(cmd))
+                    using (var reader = cmd.ExecuteReader())
                     {
-                        adapter.Fill(dt);
+                        while (reader.Read())
+                        {
+                            string code = reader["customer_code"].ToString();
+                            string name = reader["full_name"].ToString();
+
+                            string idEncrypted = reader["id_number"].ToString();
+                            string phoneEncrypted = reader["phone"].ToString();
+                            string emailEncrypted = reader["email"].ToString();
+                            string addressEncrypted = reader["address"].ToString();
+
+                            string status = Convert.ToInt32(reader["status"]) == 1 ? "Hoat dong" : "Khoa";
+
+                            string idNumber = EncryptionHelper.TryDecryptHybrid(idEncrypted);
+                            string phone = EncryptionHelper.TryDecryptHybrid(phoneEncrypted);
+                            string email = EncryptionHelper.TryDecryptHybrid(emailEncrypted);
+                            string address = EncryptionHelper.TryDecryptHybrid(addressEncrypted);
+
+                            dt.Rows.Add(code, name, idNumber, phone, email, address, status);
+                        }
                     }
                 }
             }
@@ -83,50 +95,18 @@ namespace QuanLyNganHang.DataAccess
 
         public DataTable SearchCustomers(string keyword)
         {
-            DataTable dt = new DataTable();
+            DataTable dt = GetAllCustomers();
+            string filter = string.Format("[Họ tên] LIKE '%{0}%' OR [CMND] LIKE '%{0}%' OR [Điện thoại] LIKE '%{0}%'", keyword);
 
-            try
+            DataRow[] rows = dt.Select(filter);
+            DataTable filtered = dt.Clone();
+
+            foreach (var row in rows)
             {
-                using (var conn = Database.Get_Connect())
-                {
-                    if (conn.State != ConnectionState.Open)
-                        conn.Open();
-
-                    string sql = @"
-                        SELECT 
-                            customer_code AS ""Mã KH"",
-                            full_name AS ""Họ tên"",
-                            id_number AS ""CMND"",
-                            phone AS ""Điện thoại"",
-                            email AS ""Email"",
-                            address AS ""Địa chỉ"",
-                            CASE
-                                WHEN status = 1 THEN 'Hoạt động'
-                                ELSE 'Khóa'
-                            END AS ""Trạng thái""
-                        FROM ADMIN_NGANHANG.customers
-                        WHERE status = 1 AND (
-                            LOWER(full_name) LIKE :kw OR
-                            id_number LIKE :kw OR
-                            phone LIKE :kw
-                        )";
-
-                    using (var cmd = new OracleCommand(sql, conn))
-                    {
-                        cmd.Parameters.Add(":kw", $"%{keyword.ToLower()}%");
-                        using (var adapter = new OracleDataAdapter(cmd))
-                        {
-                            adapter.Fill(dt);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Lỗi khi tìm kiếm khách hàng: {ex.Message}");
+                filtered.ImportRow(row);
             }
 
-            return dt;
+            return filtered;
         }
 
         public bool LockCustomer(string customerCode)
@@ -151,6 +131,30 @@ namespace QuanLyNganHang.DataAccess
                 throw new Exception($"Lỗi khi khóa khách hàng: {ex.Message}");
             }
         }
+
+        public bool DeleteCustomer(string customerCode)
+        {
+            try
+            {
+                using (var conn = Database.Get_Connect())
+                {
+                    if (conn.State != ConnectionState.Open)
+                        conn.Open();
+
+                    string sql = "DELETE FROM ADMIN_NGANHANG.customers WHERE customer_code = :code";
+                    using (var cmd = new OracleCommand(sql, conn))
+                    {
+                        cmd.Parameters.Add(":code", customerCode);
+                        return cmd.ExecuteNonQuery() > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Lỗi khi xóa khách hàng: {ex.Message}");
+            }
+        }
+
         public DataRow GetCustomerByCode(string code)
         {
             using (var conn = Database.Get_Connect())
@@ -159,7 +163,6 @@ namespace QuanLyNganHang.DataAccess
                     conn.Open();
 
                 string sql = "SELECT * FROM ADMIN_NGANHANG.customers WHERE customer_code = :code";
-
                 using (var cmd = new OracleCommand(sql, conn))
                 {
                     cmd.Parameters.Add(":code", code);
@@ -172,6 +175,7 @@ namespace QuanLyNganHang.DataAccess
                 }
             }
         }
+
         public bool SaveCustomer(bool isEdit, string code, string fullName, string idCard, string phone, string email, string address, int status)
         {
             using (var conn = Database.Get_Connect())
@@ -179,46 +183,44 @@ namespace QuanLyNganHang.DataAccess
                 if (conn.State != ConnectionState.Open)
                     conn.Open();
 
-                OracleCommand cmd = new OracleCommand();
-                cmd.Connection = conn;
-                cmd.BindByName = true;
-
-                if (isEdit)
+                using (var cmd = new OracleCommand())
                 {
-                    cmd.CommandText = @"
-                UPDATE ADMIN_NGANHANG.customers
-                SET full_name = :full_name,
-                    id_number = :id_number,
-                    phone = :phone,
-                    email = :email,
-                    address = :address,
-                    status = :status
-                WHERE customer_code = :customer_code";
+                    cmd.Connection = conn;
+                    cmd.BindByName = true;
+
+                    if (isEdit)
+                    {
+                        cmd.CommandText = @"
+                            UPDATE ADMIN_NGANHANG.customers
+                            SET full_name = :full_name,
+                                id_number = :id_number,
+                                phone = :phone,
+                                email = :email,
+                                address = :address,
+                                status = :status
+                            WHERE customer_code = :customer_code";
+                    }
+                    else
+                    {
+                        cmd.CommandText = @"
+                            INSERT INTO ADMIN_NGANHANG.customers
+                            (customer_id, customer_code, full_name, id_number, phone, email, address, status)
+                            VALUES (SEQ_CUSTOMER_ID.NEXTVAL, :customer_code, :full_name, :id_number, :phone, :email, :address, :status)";
+                    }
+
+                    cmd.Parameters.Add("customer_code", code);
+                    cmd.Parameters.Add("full_name", fullName);
+                    cmd.Parameters.Add("id_number", idCard);
+                    cmd.Parameters.Add("phone", phone);
+                    cmd.Parameters.Add("email", email);
+                    cmd.Parameters.Add("address", address);
+                    cmd.Parameters.Add("status", status);
+
+                    return cmd.ExecuteNonQuery() > 0;
                 }
-                else
-                {
-                    cmd.CommandText = @"
-                INSERT INTO ADMIN_NGANHANG.customers
-                (customer_id, customer_id_varchar, customer_code, full_name, id_number, phone, email, address, status)
-                VALUES (SEQ_CUSTOMER_ID.NEXTVAL, :customer_id_varchar, :customer_code, :full_name, :id_number, :phone, :email, :address, :status)";
-                    cmd.Parameters.Add("customer_id_varchar", code);
-                }
-
-                cmd.Parameters.Add("customer_code", code);
-                cmd.Parameters.Add("full_name", fullName);
-
-                var encryptedId = EncryptionHelper.EncryptRSA(idCard);
-                if (encryptedId.Length > 256) throw new Exception("ID mã hóa quá dài.");
-
-                cmd.Parameters.Add("id_number", encryptedId);
-                cmd.Parameters.Add("phone", EncryptionHelper.EncryptRSA(phone));
-                cmd.Parameters.Add("email", EncryptionHelper.EncryptRSA(email));
-                cmd.Parameters.Add("address", EncryptionHelper.EncryptRSA(address));
-                cmd.Parameters.Add("status", status);
-
-                return cmd.ExecuteNonQuery() > 0;
             }
         }
+
         public DataRow FindCustomerByEncryptedInput(string encryptedInput)
         {
             using (var conn = Database.Get_Connect())
@@ -235,12 +237,39 @@ namespace QuanLyNganHang.DataAccess
 
                     using (var adapter = new OracleDataAdapter(cmd))
                     {
-                        var dt = new DataTable();
+                        DataTable dt = new DataTable();
                         adapter.Fill(dt);
                         return dt.Rows.Count > 0 ? dt.Rows[0] : null;
                     }
                 }
             }
+        }
+
+        public DataRow FindCustomerByInputWithDecryption(string plainInput)
+        {
+            try
+            {
+                DataTable rawCustomers = GetRawCustomers();
+                foreach (DataRow row in rawCustomers.Rows)
+                {
+                    string idEncrypted = row["id_number"].ToString();
+                    string phoneEncrypted = row["phone"].ToString();
+
+                    string idDecrypted = EncryptionHelper.TryDecryptHybrid(idEncrypted);
+                    string phoneDecrypted = EncryptionHelper.TryDecryptHybrid(phoneEncrypted);
+
+                    if (idDecrypted == plainInput || phoneDecrypted == plainInput)
+                    {
+                        return row;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Lỗi khi tìm khách hàng theo mã hóa hybrid: " + ex.Message);
+            }
+
+            return null;
         }
 
         public bool HasActiveAccount(string customerId)
@@ -261,5 +290,22 @@ namespace QuanLyNganHang.DataAccess
             }
         }
 
+        public DataTable GetRawCustomers()
+        {
+            using (var conn = Database.Get_Connect())
+            {
+                if (conn.State != ConnectionState.Open)
+                    conn.Open();
+
+                string sql = "SELECT customer_id, full_name, id_number, phone FROM ADMIN_NGANHANG.customers WHERE status = 1";
+                using (var cmd = new OracleCommand(sql, conn))
+                using (var adapter = new OracleDataAdapter(cmd))
+                {
+                    DataTable dt = new DataTable();
+                    adapter.Fill(dt);
+                    return dt;
+                }
+            }
+        }
     }
 }

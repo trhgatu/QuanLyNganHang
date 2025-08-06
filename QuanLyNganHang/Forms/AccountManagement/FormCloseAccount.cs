@@ -1,5 +1,6 @@
 ﻿using Oracle.ManagedDataAccess.Client;
 using QuanLyNganHang.DataAccess;
+using QuanLyNganHang.Helpers;
 using System;
 using System.Data;
 using System.Drawing;
@@ -67,7 +68,7 @@ namespace QuanLyNganHang
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
                 BackgroundColor = Color.White,
                 BorderStyle = BorderStyle.FixedSingle,
-                Visible = false // ẩn khi mở form
+                Visible = false
             };
 
             dgvAccounts.ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle
@@ -90,10 +91,17 @@ namespace QuanLyNganHang
             try
             {
                 accountTable = accountDataAccess.GetActiveAccounts();
+
+                // Giải mã dữ liệu nhạy cảm nếu cần
+                foreach (DataRow row in accountTable.Rows)
+                {
+                    row["phone"] = EncryptionHelper.TryDecryptHybrid(row["phone"]?.ToString());
+                    row["email"] = EncryptionHelper.TryDecryptHybrid(row["email"]?.ToString());
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("❌ Lỗi tải dữ liệu: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -101,10 +109,12 @@ namespace QuanLyNganHang
         {
             if (accountTable == null) return;
 
-            string filter = $"account_number LIKE '%{txtSearch.Text}%' " +
-                            $"OR customer_name LIKE '%{txtSearch.Text}%' " +
-                            $"OR phone LIKE '%{txtSearch.Text}%' " +
-                            $"OR email LIKE '%{txtSearch.Text}%'";
+            string keyword = txtSearch.Text.Trim().Replace("'", "''");
+
+            string filter = $"account_number LIKE '%{keyword}%' " +
+                            $"OR full_name LIKE '%{keyword}%' " +
+                            $"OR phone LIKE '%{keyword}%' " +
+                            $"OR email LIKE '%{keyword}%'";
 
             try
             {
@@ -116,7 +126,6 @@ namespace QuanLyNganHang
             }
             catch
             {
-                // tránh lỗi nếu nhập ký tự đặc biệt
                 dgvAccounts.Visible = false;
             }
         }
@@ -152,7 +161,7 @@ namespace QuanLyNganHang
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("❌ Lỗi khi cập nhật tài khoản: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }

@@ -18,40 +18,27 @@ namespace QuanLyNganHang.DataAccess
             {
                 using (var conn = Database.Get_Connect())
                 {
-                    string procedure = "ADMIN_NGANHANG.pkg_Branch.pro_get_all_branches";
+                    string sql = "SELECT branch_id, branch_name, branch_code FROM ADMIN_NGANHANG.branches WHERE status = 1";
 
-                    using (OracleCommand cmd = new OracleCommand(procedure, conn))
+                    using (OracleCommand cmd = new OracleCommand(sql, conn))
                     {
-                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.CommandType = CommandType.Text; // Thay đổi thành Text
 
-                        OracleParameter resultParam = new OracleParameter
+                        using (OracleDataAdapter adapter = new OracleDataAdapter(cmd))
                         {
-                            ParameterName = "Result",
-                            OracleDbType = OracleDbType.RefCursor,
-                            Direction = ParameterDirection.Output
-                        };
-
-                        cmd.Parameters.Add(resultParam);
-
-                        cmd.ExecuteNonQuery();
-
-                        if (resultParam.Value != DBNull.Value && resultParam.Value is OracleRefCursor cursor)
-                        {
-                            using (var reader = cursor.GetDataReader())
-                            {
-                                DataTable dt = new DataTable();
-                                dt.Load(reader);
-                                return dt;
-                            }
+                            DataTable dt = new DataTable();
+                            adapter.Fill(dt);
+                            return dt;
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi gọi thủ tục: pro_get_all_branches\n" + ex.Message);
+                MessageBox.Show("Lỗi khi lấy danh sách chi nhánh: " + ex.Message);
             }
-            return null;
+            return new DataTable(); // Trả về DataTable rỗng thay vì null
         }
+
     }
 }

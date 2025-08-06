@@ -1,8 +1,9 @@
-﻿using System;
+﻿using QuanLyNganHang.DataAccess;
+using QuanLyNganHang.Helpers;
+using System;
+using System.Data;
 using System.Drawing;
 using System.Windows.Forms;
-using QuanLyNganHang.Helpers;
-using QuanLyNganHang.DataAccess;
 
 namespace QuanLyNganHang.Forms.Dashboard.Content
 {
@@ -30,7 +31,7 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
 
         public FormOpenAccount(string customerId, string customerName) : this()
         {
-            cbCustomer.Items.Add(new ComboBoxItem($"{customerName} ({customerId})", customerId));
+            cbCustomer.Items.Add(new ComboBoxItem(customerName + " (" + customerId + ")", customerId));
             cbCustomer.SelectedIndex = 0;
             cbCustomer.Enabled = false;
         }
@@ -125,7 +126,7 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                 Font = font,
                 FlatStyle = FlatStyle.Flat
             };
-            btnCancel.Click += (s, e) => this.Close();
+            btnCancel.Click += delegate { this.Close(); };
 
             Controls.AddRange(new Control[] { btnSave, btnCancel });
         }
@@ -139,37 +140,58 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                 return;
             }
 
-            string encrypted = EncryptionHelper.EncryptRSA(input);
-            var customerRow = customerDataAccess.FindCustomerByEncryptedInput(encrypted);
-
-            cbCustomer.Items.Clear();
-            if (customerRow == null)
+            try
             {
-                MessageBox.Show("❗ Không tìm thấy khách hàng.", "Kết quả", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                cbCustomer.Items.Clear();
                 cbCustomer.Enabled = false;
-                return;
-            }
 
-            string customerId = customerRow["customer_id"].ToString();
-            string customerName = customerRow["full_name"].ToString();
+                DataTable allCustomers = customerDataAccess.GetRawCustomers();
+                DataRow matchedRow = null;
 
-            if (accountDataAccess.CustomerHasActiveAccount(customerId))
-            {
-                MessageBox.Show($"⚠️ Khách hàng \"{customerName}\" đã có tài khoản đang hoạt động!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                foreach (DataRow row in allCustomers.Rows)
+                {
+                    string decryptedId = EncryptionHelper.TryDecryptHybrid(row["id_number"].ToString());
+                    string decryptedPhone = EncryptionHelper.TryDecryptHybrid(row["phone"].ToString());
+
+                    if (string.Equals(decryptedId, input, StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(decryptedPhone, input, StringComparison.OrdinalIgnoreCase))
+                    {
+                        matchedRow = row;
+                        break;
+                    }
+                }
+
+                if (matchedRow == null)
+                {
+                    MessageBox.Show("❗ Không tìm thấy khách hàng.", "Kết quả", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                string customerId = matchedRow["customer_id"].ToString();
+                string customerName = matchedRow["full_name"].ToString();
+
+                if (accountDataAccess.CustomerHasActiveAccount(customerId))
+                {
+                    MessageBox.Show($"⚠️ Khách hàng \"{customerName}\" đã có tài khoản đang hoạt động!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    cbCustomer.Items.Add(new ComboBoxItem($"{customerName} ({customerId})", customerId));
+                    cbCustomer.SelectedIndex = 0;
+                    cbCustomer.Enabled = true;
+                    MessageBox.Show($"✅ Khách hàng \"{customerName}\" đủ điều kiện mở tài khoản.", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                cbCustomer.Items.Add(new ComboBoxItem($"{customerName} ({customerId})", customerId));
-                cbCustomer.SelectedIndex = 0;
-                cbCustomer.Enabled = true;
-                MessageBox.Show($"✅ Khách hàng \"{customerName}\" đủ điều kiện mở tài khoản.", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("❌ Lỗi tìm kiếm khách hàng: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void SaveAccount(object sender, EventArgs e)
         {
-            var cust = cbCustomer.SelectedItem as ComboBoxItem;
-            var accType = cbAccountType.SelectedItem as ComboBoxItem;
+            ComboBoxItem cust = cbCustomer.SelectedItem as ComboBoxItem;
+            ComboBoxItem accType = cbAccountType.SelectedItem as ComboBoxItem;
 
             if (cust == null || accType == null || string.IsNullOrWhiteSpace(txtBalance.Text))
             {
@@ -197,8 +219,8 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
 
     public class ComboBoxItem
     {
-        public string Text { get; }
-        public string Value { get; }
+        public string Text { get; private set; }
+        public string Value { get; private set; }
 
         public ComboBoxItem(string text, string value)
         {
@@ -206,6 +228,9 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
             Value = value;
         }
 
-        public override string ToString() => Text;
+        public override string ToString()
+        {
+            return Text;
+        }
     }
 }

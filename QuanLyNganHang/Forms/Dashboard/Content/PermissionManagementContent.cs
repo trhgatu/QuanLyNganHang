@@ -1,4 +1,5 @@
 ﻿using QuanLyNganHang.DataAccess;
+using QuanLyNganHang.Forms.OLS;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -51,31 +52,13 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
         private TabPage CreateDACTab()
         {
             TabPage tab = new TabPage("DAC");
-            Label info = new Label
-            {
-                Text = "🔐 Discretionary Access Control\n\nQuản lý quyền truy cập dữ liệu theo người dùng",
-                Location = new Point(20, 20),
-                Size = new Size(400, 100),
-                Font = new Font("Segoe UI", 11)
-            };
-            Button btnOpenAuthorizationForm = new Button
-            {
-                Text = "Mở Form Phân Quyền Oracle",
-                Location = new Point(20, 140),
-                Size = new Size(250, 40),
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                BackColor = Color.LightSteelBlue
-            };
-            btnOpenAuthorizationForm.Click += (s, e) =>
-            {
-                var form = new AuthorizationForm();
-                form.ShowDialog();
-            };
-
-            tab.Controls.Add(btnOpenAuthorizationForm);
-
+            // Thay cho label + button
+            var authControl = new AuthorizationForm();
+            authControl.Dock = DockStyle.Fill;
+            tab.Controls.Add(authControl);
             return tab;
         }
+
 
         private TabPage CreateMACTab()
         {
@@ -122,14 +105,9 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
         private TabPage CreateOLSTab()
         {
             TabPage tab = new TabPage("OLS");
-            Label info = new Label
-            {
-                Text = "🏷️ Oracle Label Security\n\nKiểm soát truy cập bằng nhãn Oracle",
-                Location = new Point(20, 20),
-                Size = new Size(400, 100),
-                Font = new Font("Segoe UI", 11)
-            };
-            tab.Controls.Add(info);
+            var authControl = new OLSForm();
+            authControl.Dock = DockStyle.Fill;
+            tab.Controls.Add(authControl);
             return tab;
         }
 

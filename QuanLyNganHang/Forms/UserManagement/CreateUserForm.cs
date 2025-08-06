@@ -127,25 +127,41 @@ namespace QuanLyNganHang.Forms.UserManagement
 
         private void LoadComboBoxData()
         {
-            var roles = roleDataAccess.GetAllRoles();
-            cb_role.DataSource = roles;
-            cb_role.DisplayMember = "role_name";
-            cb_role.ValueMember = "role_id";
-            var branches = branchDataAccess.GetAllBranches();
-            branches.Columns.Add("display", typeof(string));
-
-            foreach (DataRow row in branches.Rows)
+            try
             {
-                string name = row["branch_name"].ToString();
-                string code = row["branch_code"].ToString();
-                row["display"] = $"{name} ({code})"; 
+                // Load roles
+                var roles = roleDataAccess.GetAllRoles();
+                if (roles != null && roles.Rows.Count > 0)
+                {
+                    cb_role.DataSource = roles;
+                    cb_role.DisplayMember = "role_name";
+                    cb_role.ValueMember = "role_id";
+                }
+
+                // Load branches
+                var branches = branchDataAccess.GetAllBranches();
+                if (branches != null && branches.Rows.Count > 0)
+                {
+                    branches.Columns.Add("display", typeof(string));
+
+                    foreach (DataRow row in branches.Rows)
+                    {
+                        string name = row["branch_name"]?.ToString() ?? "";
+                        string code = row["branch_code"]?.ToString() ?? "";
+                        row["display"] = $"{name} ({code})";
+                    }
+
+                    cb_branch.DataSource = branches;
+                    cb_branch.DisplayMember = "display";
+                    cb_branch.ValueMember = "branch_id";
+                }
             }
-
-            cb_branch.DataSource = branches;
-            cb_branch.DisplayMember = "display";
-            cb_branch.ValueMember = "branch_id";
-
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi load dữ liệu: " + ex.Message);
+            }
         }
+
 
     }
 }

@@ -108,7 +108,7 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
 
             try
             {
-                string encryptedInput = EncryptionHelper.EncryptRSA(input);
+                string encryptedInput = EncryptionHelper.EncryptHybrid(input);
                 var customerRow = customerDataAccess.FindCustomerByEncryptedInput(encryptedInput);
 
                 if (customerRow != null)

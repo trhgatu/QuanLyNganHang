@@ -12,14 +12,13 @@ using Oracle.ManagedDataAccess.Client;
 
 namespace QuanLyNganHang.Forms
 {
-    public partial class AuthorizationForm : Form
+    public partial class AuthorizationForm : UserControl
     {
         private AuthorizationManager p;
 
         public AuthorizationForm()
         {
             InitializeComponent();
-            CenterToScreen();
             try
             {
                 p = new AuthorizationManager();

@@ -54,7 +54,6 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
             {
                 ("Profile", DashboardConstants.Colors.Info, (Action)ShowProfileForm),
                 ("Thêm người dùng", DashboardConstants.Colors.Success, (Action)ShowAddEmployeeForm),
-                ("Phân quyền", DashboardConstants.Colors.Warning, (Action)ShowPermissionForm),
                 ("Làm mới", DashboardConstants.Colors.Info, (Action)RefreshContent)
             });
             ContentPanel.Controls.Add(actionPanel);
@@ -225,8 +224,6 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                 ShowError($"Lỗi khi mở form tạo user: {ex.Message}");
             }
         }
-        private void ShowPermissionForm() => ShowMessage("Phân quyền");
-
         private void ShowProfileForm()
         {
             try

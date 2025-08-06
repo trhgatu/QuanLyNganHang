@@ -7,69 +7,55 @@ namespace QuanLyNganHang.DataAccess
 {
     public class RoleDataAccess
     {
-
         public DataTable GetAllRoles()
         {
             try
             {
                 using (var conn = Database.Get_Connect())
                 {
-                    string procedure = "ADMIN_NGANHANG.pkg_Role.pro_get_all_roles";
+                    string sql = "SELECT role_id, role_name FROM ADMIN_NGANHANG.roles WHERE status = 1";
 
-                    using (OracleCommand cmd = new OracleCommand(procedure, conn))
+                    using (OracleCommand cmd = new OracleCommand(sql, conn))
                     {
-                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.CommandType = CommandType.Text; 
 
-                        OracleParameter resultParam = new OracleParameter
+                        using (OracleDataAdapter adapter = new OracleDataAdapter(cmd))
                         {
-                            ParameterName = "Result",
-                            OracleDbType = OracleDbType.RefCursor,
-                            Direction = ParameterDirection.Output
-                        };
-
-                        cmd.Parameters.Add(resultParam);
-
-                        cmd.ExecuteNonQuery();
-                        if (resultParam.Value != DBNull.Value && resultParam.Value is OracleRefCursor cursor)
-                        {
-                            using (var reader = cursor.GetDataReader())
-                            {
-                                DataTable table = new DataTable();
-                                table.Load(reader);
-                                return table;
-                            }
+                            DataTable dt = new DataTable();
+                            adapter.Fill(dt);
+                            return dt;
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                System.Windows.Forms.MessageBox.Show("Lỗi gọi thủ tục: pro_get_all_roles\n" + ex.Message);
+                System.Windows.Forms.MessageBox.Show("Lỗi khi lấy danh sách vai trò: " + ex.Message);
             }
-            return null;
+            return new DataTable(); 
         }
-
 
         public bool AssignRoleToEmployee(int employeeId, int roleId)
         {
-            var connection = Database.Get_Connect();
-
-            if (connection.State != ConnectionState.Open)
-                connection.Open();
-            string query = "INSERT INTO ADMIN_NGANHANG.employee_roles (employee_id, role_id) VALUES (:employeeId, :roleId)";
-            using (OracleCommand cmd = new OracleCommand(query, connection))
+            try
             {
-                cmd.Parameters.Add(new OracleParameter("employeeId", employeeId));
-                cmd.Parameters.Add(new OracleParameter("roleId", roleId));
-                try
+                using (var connection = Database.Get_Connect())
                 {
-                    return cmd.ExecuteNonQuery() > 0;
+                    string query = "INSERT INTO ADMIN_NGANHANG.employee_roles (employee_id, role_id) VALUES (:employeeId, :roleId)";
+
+                    using (OracleCommand cmd = new OracleCommand(query, connection))
+                    {
+                        cmd.Parameters.Add(new OracleParameter("employeeId", employeeId));
+                        cmd.Parameters.Add(new OracleParameter("roleId", roleId));
+
+                        return cmd.ExecuteNonQuery() > 0;
+                    }
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Error assigning role: " + ex.Message);
-                    return false;
-                }
+            }
+            catch (Exception ex)
+            {
+                System.Windows.Forms.MessageBox.Show("Lỗi khi gán vai trò: " + ex.Message);
+                return false;
             }
         }
     }
