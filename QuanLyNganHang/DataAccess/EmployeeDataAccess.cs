@@ -130,6 +130,98 @@ namespace QuanLyNganHang.DataAccess
                 return (false, ex.Message);
             }
         }
+        public static (bool success, string errorMsg) UpdateProfile(string oracleUser, string fullName, string email, string phone, string address)
+        {
+            try
+            {
+                using (var conn = Database.Get_Connect())
+                {
+                    using (var cmd = new OracleCommand("ADMIN_NGANHANG.PKG_EMPLOYEE.pro_update_profile", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        // Input parameters
+                        cmd.Parameters.Add("p_oracle_user", OracleDbType.Varchar2).Value = oracleUser.ToUpper();
+                        cmd.Parameters.Add("p_full_name", OracleDbType.Varchar2).Value = fullName;
+                        cmd.Parameters.Add("p_email", OracleDbType.Varchar2).Value = email ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("p_phone", OracleDbType.Varchar2).Value = phone ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("p_address", OracleDbType.Varchar2).Value = address ?? (object)DBNull.Value;
+
+                        // Output parameters
+                        var p_success = new OracleParameter("p_success", OracleDbType.Int32)
+                        {
+                            Direction = ParameterDirection.Output
+                        };
+                        cmd.Parameters.Add(p_success);
+
+                        var p_error = new OracleParameter("p_error_msg", OracleDbType.Varchar2, 4000)
+                        {
+                            Direction = ParameterDirection.Output
+                        };
+                        cmd.Parameters.Add(p_error);
+
+                        cmd.ExecuteNonQuery();
+
+                        OracleDecimal oracleDec = (OracleDecimal)p_success.Value;
+                        int success = oracleDec.ToInt32();
+
+                        string errMsg = p_error.Value?.ToString();
+
+                        return (success == 1, errMsg);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Lỗi kết nối: {ex.Message}");
+            }
+        }
+        public static (bool success, string errorMsg) ChangePassword(string oracleUser, string oldPassword, string newPassword)
+        {
+            try
+            {
+                // ✅ KHÔNG hash nữa - gửi mật khẩu plaintext để Oracle xử lý
+                using (var conn = Database.Get_Connect())
+                {
+                    using (var cmd = new OracleCommand("ADMIN_NGANHANG.PKG_EMPLOYEE.pro_change_password", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        // Input parameters - plaintext passwords
+                        cmd.Parameters.Add("p_oracle_user", OracleDbType.Varchar2).Value = oracleUser.ToUpper();
+                        cmd.Parameters.Add("p_old_password", OracleDbType.Varchar2).Value = oldPassword;  // ✅ Plaintext
+                        cmd.Parameters.Add("p_new_password", OracleDbType.Varchar2).Value = newPassword;  // ✅ Plaintext
+
+                        // Output parameters
+                        var p_success = new OracleParameter("p_success", OracleDbType.Int32)
+                        {
+                            Direction = ParameterDirection.Output
+                        };
+                        cmd.Parameters.Add(p_success);
+
+                        var p_error = new OracleParameter("p_error_msg", OracleDbType.Varchar2, 4000)
+                        {
+                            Direction = ParameterDirection.Output
+                        };
+                        cmd.Parameters.Add(p_error);
+
+                        cmd.ExecuteNonQuery();
+
+                        OracleDecimal oracleDec = (OracleDecimal)p_success.Value;
+                        int success = oracleDec.ToInt32();
+
+                        string errMsg = p_error.Value?.ToString();
+
+                        return (success == 1, errMsg);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Lỗi kết nối: {ex.Message}");
+            }
+        }
+
 
 
     }

@@ -1,5 +1,4 @@
 ﻿using QuanLyNganHang.DataAccess;
-using QuanLyNganHang.Forms.OLS;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -40,77 +39,20 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                 Size = new Size(ContentPanel.Width - 40, ContentPanel.Height - 100),
                 Font = new Font("Segoe UI", 10)
             };
-            tabControl.TabPages.Add(CreateDACTab());
-            tabControl.TabPages.Add(CreateMACTab());
             tabControl.TabPages.Add(CreateRBACTab());
-            tabControl.TabPages.Add(CreateVPDTab());
-            tabControl.TabPages.Add(CreateOLSTab());
 
             ContentPanel.Controls.Add(tabControl);
         }
-
-        private TabPage CreateDACTab()
+        private TabPage CreateRBACTab()
         {
-            TabPage tab = new TabPage("DAC");
-            // Thay cho label + button
+            TabPage tab = new TabPage("RBAC");
             var authControl = new AuthorizationForm();
             authControl.Dock = DockStyle.Fill;
             tab.Controls.Add(authControl);
             return tab;
         }
 
-
-        private TabPage CreateMACTab()
-        {
-            TabPage tab = new TabPage("MAC");
-            Label info = new Label
-            {
-                Text = "🏷️ Mandatory Access Control\n\nGắn nhãn bảo mật cho dữ liệu nhạy cảm",
-                Location = new Point(20, 20),
-                Size = new Size(400, 100),
-                Font = new Font("Segoe UI", 11)
-            };
-            tab.Controls.Add(info);
-            return tab;
-        }
-
-        private TabPage CreateRBACTab()
-        {
-            TabPage tab = new TabPage("RBAC");
-            Label info = new Label
-            {
-                Text = "👥 Role-Based Access Control\n\nPhân quyền theo vai trò (Admin vs Employee)",
-                Location = new Point(20, 20),
-                Size = new Size(400, 100),
-                Font = new Font("Segoe UI", 11)
-            };
-            tab.Controls.Add(info);
-            return tab;
-        }
-
-        private TabPage CreateVPDTab()
-        {
-            TabPage tab = new TabPage("VPD");
-            Label info = new Label
-            {
-                Text = "🔍 Virtual Private Database\n\nGiới hạn dữ liệu theo người dùng",
-                Location = new Point(20, 20),
-                Size = new Size(400, 100),
-                Font = new Font("Segoe UI", 11)
-            };
-            tab.Controls.Add(info);
-            return tab;
-        }
-
-        private TabPage CreateOLSTab()
-        {
-            TabPage tab = new TabPage("OLS");
-            var authControl = new OLSForm();
-            authControl.Dock = DockStyle.Fill;
-            tab.Controls.Add(authControl);
-            return tab;
-        }
-
+  
         public override void RefreshContent()
         {
             LoadContent();

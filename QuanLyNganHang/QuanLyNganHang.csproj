@@ -91,12 +91,17 @@
     <Compile Include="Core\Helpers\HybridEncryptor.cs" />
     <Compile Include="Core\Helpers\RsaEncryptor.cs" />
     <Compile Include="Core\SessionContext.cs" />
+    <Compile Include="CreateProfileForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CreateProfileForm.Designer.cs">
+      <DependentUpon>CreateProfileForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="DataAccess\AccountDataAccess.cs" />
     <Compile Include="DataAccess\AuditLogDataAccess.cs" />
     <Compile Include="DataAccess\AuthorizationManager.cs" />
     <Compile Include="DataAccess\BranchDataAccess.cs" />
     <Compile Include="DataAccess\CustomerDataAccess.cs" />
-    <Compile Include="DataAccess\OLSDataAccess.cs" />
     <Compile Include="DataAccess\Prod\CreateUser.cs" />
     <Compile Include="DataAccess\Prod\DeleteUser.cs" />
     <Compile Include="DataAccess\EmployeeDataAccess.cs" />
@@ -116,30 +121,6 @@
     </Compile>
     <Compile Include="Forms\Authorization\AuthorizationControl.Designer.cs">
       <DependentUpon>AuthorizationControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\Authorization\OLS\OLSForm.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Forms\Authorization\OLS\OLSForm.Designer.cs">
-      <DependentUpon>OLSForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\Authorization\OLS\UserControl_EnableDisablePolicy.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Forms\Authorization\OLS\UserControl_EnableDisablePolicy.Designer.cs">
-      <DependentUpon>UserControl_EnableDisablePolicy.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\Authorization\OLS\UserControl_LabelComponent.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Forms\Authorization\OLS\UserControl_LabelComponent.Designer.cs">
-      <DependentUpon>UserControl_LabelComponent.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\Authorization\OLS\UserControl_TaoPolicyGanQuyen.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Forms\Authorization\OLS\UserControl_TaoPolicyGanQuyen.Designer.cs">
-      <DependentUpon>UserControl_TaoPolicyGanQuyen.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\CustomerManagement\FormAddEditCustomer.cs">
       <SubType>Form</SubType>
@@ -215,6 +196,24 @@
     <Compile Include="Forms\Profile\UpdateProfileForm.Designer.cs">
       <DependentUpon>UpdateProfileForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\Transaction\DepositForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Transaction\DepositForm.Designer.cs">
+      <DependentUpon>DepositForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Transaction\TransactionDetailForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Transaction\TransactionDetailForm.Designer.cs">
+      <DependentUpon>TransactionDetailForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Transaction\WithDrawForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Transaction\WithDrawForm.Designer.cs">
+      <DependentUpon>WithDrawForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\UserManagement\CreateUserForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -238,6 +237,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\Login\LoginForm.resx">
       <DependentUpon>LoginForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Transaction\TransactionDetailForm.resx">
+      <DependentUpon>TransactionDetailForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\UserManagement\CreateUserForm.resx">
       <DependentUpon>CreateUserForm.cs</DependentUpon>
@@ -277,5 +279,6 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

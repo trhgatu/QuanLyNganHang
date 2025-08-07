@@ -1,4 +1,5 @@
-﻿using System;
+﻿using QuanLyNganHang.Core.Helpers;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -8,11 +9,14 @@ namespace QuanLyNganHang.Forms.Dashboard
     {
         private Panel menuPanel;
         private Button currentSelectedButton;
+        private Form parentForm; 
 
         public event EventHandler<string> MenuItemClicked;
 
         public Panel CreateMenu(Form parentForm)
         {
+            this.parentForm = parentForm; 
+
             menuPanel = new Panel
             {
                 Size = new Size(DashboardConstants.Sizes.MenuPanelWidth, parentForm.Height - 120),
@@ -32,42 +36,65 @@ namespace QuanLyNganHang.Forms.Dashboard
             var menuItems = new[]
             {
                 new {Text = "👤 Thông tin cá nhân", Key = "ProfileManagement"},
-                new { Text = "👥 Quản lý Người dùng", Key = "UserManagement" },
+                new { Text = "👥 Quản lý Nhân viên", Key = "UserManagement" },
                 new { Text = "👤 Quản lý Khách hàng", Key = "CustomerManagement" },
                 new { Text = "🏦 Quản lý Tài khoản", Key = "AccountManagement" },
                 new { Text = "💰 Quản lý Giao dịch", Key = "TransactionManagement" },
                 new { Text = "🔐 Phân quyền", Key = "PermissionManagement" },
-                new { Text = "🔐 Quản lý tài khoản Oracle", Key = "OracleAccountManagement" },
                 new { Text = "📋 Nhật ký Audit", Key = "AuditLog" },
                 new { Text = "📊 Báo cáo", Key = "Reports" },
-
             };
 
-            for (int i = 0; i < menuItems.Length; i++)
+            // ✅ Reverse order để đúng thứ tự hiển thị (do Dock = Top)
+            for (int i = menuItems.Length - 1; i >= 0; i--)
             {
                 var menuItem = menuItems[i];
 
-                Button menuButton = new Button
-                {
-                    Text = menuItem.Text,
-                    Size = new Size(DashboardConstants.Sizes.MenuPanelWidth, DashboardConstants.Sizes.MenuButtonHeight),
-                    FlatStyle = FlatStyle.Flat,
-                    BackColor = DashboardConstants.Colors.Secondary,
-                    ForeColor = Color.White,
-                    Font = new Font("Segoe UI", 11, FontStyle.Regular),
-                    TextAlign = ContentAlignment.MiddleLeft,
-                    Padding = new Padding(20, 0, 0, 0),
-                    Cursor = Cursors.Hand,
-                    Dock = DockStyle.Top,
-                    Tag = menuItem.Key // String, không phải Action
-                };
-
-                menuButton.FlatAppearance.BorderSize = 0;
-                menuButton.FlatAppearance.MouseOverBackColor = DashboardConstants.Colors.MenuHover;
-                menuButton.Click += MenuButton_Click;
-
+                Button menuButton = CreateMenuButton(menuItem.Text, menuItem.Key);
                 menuPanel.Controls.Add(menuButton);
             }
+        }
+
+        // ✅ Extract method để tái sử dụng
+        private Button CreateMenuButton(string text, string key)
+        {
+            Button menuButton = new Button
+            {
+                Text = text,
+                Size = new Size(DashboardConstants.Sizes.MenuPanelWidth, DashboardConstants.Sizes.MenuButtonHeight),
+                FlatStyle = FlatStyle.Flat,
+                BackColor = DashboardConstants.Colors.Secondary,
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 11, FontStyle.Regular),
+                TextAlign = ContentAlignment.MiddleLeft,
+                Padding = new Padding(20, 0, 0, 0),
+                Cursor = Cursors.Hand,
+                Dock = DockStyle.Top,
+                Tag = key
+            };
+
+            menuButton.FlatAppearance.BorderSize = 0;
+            menuButton.FlatAppearance.MouseOverBackColor = DashboardConstants.Colors.MenuHover;
+
+            // ✅ Thêm hover effects
+            menuButton.MouseEnter += (s, e) =>
+            {
+                if (menuButton != currentSelectedButton)
+                {
+                    menuButton.BackColor = DashboardConstants.Colors.MenuHover;
+                }
+            };
+
+            menuButton.MouseLeave += (s, e) =>
+            {
+                if (menuButton != currentSelectedButton)
+                {
+                    menuButton.BackColor = DashboardConstants.Colors.Secondary;
+                }
+            };
+
+            menuButton.Click += MenuButton_Click;
+            return menuButton;
         }
 
         private void CreateLogoutButton()
@@ -101,14 +128,12 @@ namespace QuanLyNganHang.Forms.Dashboard
                 if (clickedButton?.Tag == null) return;
 
                 string menuKey = clickedButton.Tag.ToString();
-                if (menuKey != "Logout")
-                {
-                    if (currentSelectedButton != null)
-                        currentSelectedButton.BackColor = DashboardConstants.Colors.Secondary;
+                if (currentSelectedButton != null)
+                    currentSelectedButton.BackColor = DashboardConstants.Colors.Secondary;
 
-                    clickedButton.BackColor = DashboardConstants.Colors.MenuHover;
-                    currentSelectedButton = clickedButton;
-                }
+                clickedButton.BackColor = DashboardConstants.Colors.MenuHover;
+                currentSelectedButton = clickedButton;
+
                 OnMenuItemClicked(menuKey);
             }
             catch (Exception ex)
@@ -117,6 +142,8 @@ namespace QuanLyNganHang.Forms.Dashboard
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        
 
         private void OnMenuItemClicked(string menuKey)
         {
@@ -151,6 +178,28 @@ namespace QuanLyNganHang.Forms.Dashboard
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error setting selected menu: {ex.Message}");
+            }
+        }
+
+        // ✅ Method để reset selected state khi logout
+        public void ClearSelection()
+        {
+            if (currentSelectedButton != null)
+            {
+                currentSelectedButton.BackColor = DashboardConstants.Colors.Secondary;
+                currentSelectedButton = null;
+            }
+        }
+
+        // ✅ Method để disable menu khi đang logout
+        public void SetMenuEnabled(bool enabled)
+        {
+            if (menuPanel != null)
+            {
+                foreach (Control control in menuPanel.Controls)
+                {
+                    control.Enabled = enabled;
+                }
             }
         }
     }

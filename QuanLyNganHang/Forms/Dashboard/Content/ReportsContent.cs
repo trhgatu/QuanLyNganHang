@@ -185,8 +185,6 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
 
             return tab;
         }
-
-        // Action methods đơn giản
         private void ShowCreateReportForm() => ShowMessage("Tạo báo cáo mới");
         private void ShowExportForm() => ShowMessage("Xuất báo cáo Excel");
 

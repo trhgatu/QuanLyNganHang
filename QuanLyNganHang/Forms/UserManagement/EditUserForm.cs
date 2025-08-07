@@ -236,35 +236,91 @@ namespace QuanLyNganHang.Forms.UserManagement
 
         private void btn_save_Click(object sender, EventArgs e)
         {
-            string username = txt_username.Text.Trim();
-            string password = txt_password.Text;
-            string fullName = txt_fullname.Text.Trim();
-            string email = txt_email.Text.Trim();
-            string phone = txt_phone.Text.Trim();
-            string position = txt_position.Text.Trim();
-            string oracleUser = txt_oracleuser.Text.Trim();
-
-            if (cb_branch.SelectedValue == null || cb_role.SelectedValue == null)
+            try
             {
-                MessageBox.Show("Vui lòng chọn chi nhánh và vai trò", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                // Validation
+                if (string.IsNullOrWhiteSpace(txt_fullname.Text))
+                {
+                    MessageBox.Show("Vui lòng nhập họ và tên!", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txt_fullname.Focus();
+                    return;
+                }
+
+                if (cb_branch.SelectedValue == null || cb_role.SelectedValue == null)
+                {
+                    MessageBox.Show("Vui lòng chọn chi nhánh và vai trò!", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // Validate email format
+                if (!string.IsNullOrWhiteSpace(txt_email.Text) && !IsValidEmail(txt_email.Text))
+                {
+                    MessageBox.Show("Định dạng email không hợp lệ!", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txt_email.Focus();
+                    return;
+                }
+
+                // Collect data
+                string username = txt_username.Text.Trim();
+                string password = txt_password.Text; // Có thể để trống nếu không đổi
+                string fullName = txt_fullname.Text.Trim();
+                string email = txt_email.Text.Trim();
+                string phone = txt_phone.Text.Trim();
+                string position = txt_position.Text.Trim();
+                string oracleUser = txt_oracleuser.Text.Trim();
+
+                int branchId = Convert.ToInt32(cb_branch.SelectedValue);
+                int roleId = Convert.ToInt32(cb_role.SelectedValue);
+
+                // Xác nhận cập nhật
+                string confirmMessage = $"Xác nhận cập nhật thông tin người dùng '{username}'?";
+                if (!string.IsNullOrEmpty(password))
+                {
+                    confirmMessage += "\n\nLưu ý: Mật khẩu sẽ được thay đổi!";
+                }
+
+                if (MessageBox.Show(confirmMessage, "Xác nhận",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                    return;
+
+                // Thực hiện cập nhật
+                var userDA = new UserDataAccess();
+                bool result = userDA.UpdateUserInfo(_employeeId, username, password, oracleUser,
+                    fullName, email, phone, position, branchId, roleId);
+
+                if (result)
+                {
+                    MessageBox.Show("Cập nhật người dùng thành công!", "Thành công",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    this.DialogResult = DialogResult.OK;
+                    this.Close();
+                }
+                else
+                {
+                    MessageBox.Show("Cập nhật thất bại!", "Lỗi",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
-
-            int branchId = Convert.ToInt32(cb_branch.SelectedValue);
-            int roleId = Convert.ToInt32(cb_role.SelectedValue);
-
-            var userDA = new UserDataAccess();
-            bool result = userDA.UpdateUserInfo(_employeeId, username, password, oracleUser, fullName, email, phone, position, branchId, roleId);
-
-            if (result)
+            catch (Exception ex)
             {
-                MessageBox.Show("Cập nhật người dùng thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                this.DialogResult = DialogResult.OK;
-                this.Close();
+                MessageBox.Show("Lỗi khi cập nhật: " + ex.Message, "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            else
+        }
+
+        private bool IsValidEmail(string email)
+        {
+            try
             {
-                MessageBox.Show("Cập nhật thất bại!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                var addr = new System.Net.Mail.MailAddress(email);
+                return addr.Address == email;
+            }
+            catch
+            {
+                return false;
             }
         }
     }

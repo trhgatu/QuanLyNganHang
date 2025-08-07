@@ -50,8 +50,7 @@ namespace QuanLyNganHang.Forms.Login
         public static readonly string[] SecurityFeatures = {
             "🔐 Mã hóa AES 256-bit",
             "🛡️ Xác thực đa lớp",
-            "📋 Audit Trail đầy đủ",
-            "⏰ Session timeout tự động",
+            "📋 Audit Trail",
             "🚫 Khóa tài khoản sau 3 lần sai"
         };
 

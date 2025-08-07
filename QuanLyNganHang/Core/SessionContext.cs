@@ -50,6 +50,8 @@ namespace QuanLyNganHang.Core
             BankAddress = null;
             BankPhone = null;
             BankEmail = null;
+            System.GC.Collect();
+
         }
     }
 }

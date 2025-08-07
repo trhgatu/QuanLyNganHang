@@ -83,7 +83,7 @@ namespace QuanLyNganHang
         {
             try
             {
-                string Function = "fun_account_status";
+                string Function = "ADMIN_NGANHANG.fun_account_status";
 
                 OracleConnection cnn = Get_Connect();
 
@@ -98,10 +98,9 @@ namespace QuanLyNganHang
                     CommandText = Function,
                     CommandType = CommandType.StoredProcedure
                 };
-
                 OracleParameter resultParam = new OracleParameter
                 {
-                    ParameterName = "@Result",
+                    ParameterName = "return_value", 
                     OracleDbType = OracleDbType.Varchar2,
                     Size = 100,
                     Direction = ParameterDirection.ReturnValue
@@ -110,7 +109,7 @@ namespace QuanLyNganHang
 
                 OracleParameter UserName = new OracleParameter
                 {
-                    ParameterName = "@User",
+                    ParameterName = "username",
                     OracleDbType = OracleDbType.Varchar2,
                     Value = user.ToUpper(),
                     Direction = ParameterDirection.Input
@@ -121,16 +120,21 @@ namespace QuanLyNganHang
 
                 if (resultParam.Value != DBNull.Value)
                 {
-                    return ((OracleString)resultParam.Value).ToString().Trim();
+                    string status = ((OracleString)resultParam.Value).ToString().Trim();
+                    System.Diagnostics.Debug.WriteLine($"User: {user}, Status: '{status}'");
+
+                    return status;
                 }
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Error getting status for user {user}: {ex.Message}");
                 return "Error: " + ex.Message;
             }
 
-            return "";
+            return " "; 
         }
+
 
 
     }

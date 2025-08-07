@@ -1,4 +1,5 @@
 ﻿using QuanLyNganHang.DataAccess;
+using QuanLyNganHang.Forms.Shared;
 using System;
 using System.Data;
 using System.Drawing;
@@ -9,7 +10,7 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
 {
     public class CustomerManagementContent : BaseContent
     {
-        private CustomerDataAccess customerDataAccess;
+        private readonly CustomerDataAccess customerDataAccess;
 
         public CustomerManagementContent(Panel contentPanel) : base(contentPanel)
         {
@@ -21,9 +22,7 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
             try
             {
                 ClearContent();
-
-                var title = DashboardUIFactory.CreateTitle("QUẢN LÝ KHÁCH HÀNG", ContentPanel.Width);
-                ContentPanel.Controls.Add(title);
+                ContentPanel.Controls.Add(DashboardUIFactory.CreateTitle("QUẢN LÝ KHÁCH HÀNG", ContentPanel.Width));
 
                 LoadCustomerStatistics();
                 CreateCustomerActionPanel();
@@ -56,6 +55,7 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                 ("Tìm kiếm nâng cao", DashboardConstants.Colors.Primary, (Action)ShowAdvancedSearchForm),
                 ("Export dữ liệu", DashboardConstants.Colors.Warning, (Action)ShowExportDataForm),
                 ("Import Excel", DashboardConstants.Colors.Info, (Action)ShowImportExcelForm),
+                ("Xem mã hóa KH", DashboardConstants.Colors.Danger, (Action)ShowEncryptedView),
                 ("Làm mới", DashboardConstants.Colors.Info, (Action)RefreshContent)
             });
             ContentPanel.Controls.Add(actionPanel);
@@ -65,18 +65,19 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
         {
             try
             {
-                DataGridView dgv = DashboardUIFactory.CreateDataGrid();
+                ContentPanel.Controls.RemoveByKey("dataGridView1");
+
+                var dgv = DashboardUIFactory.CreateDataGrid();
                 dgv.Name = "dataGridView1";
                 dgv.Location = new Point(20, 300);
                 dgv.Size = new Size(ContentPanel.Width - 40, ContentPanel.Height - 320);
                 dgv.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
 
-                DataTable customerData = customerDataAccess.GetAllCustomers();
+                var customerData = customerDataAccess.GetAllCustomers();
 
-                if (customerData != null && customerData.Rows.Count > 0)
+                if (customerData?.Rows.Count > 0)
                 {
                     dgv.DataSource = customerData;
-
                     ConfigureCustomerDataGridColumns(dgv);
                     AddCustomerContextMenu(dgv);
                 }
@@ -101,89 +102,128 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
             if (dgv.Columns["Họ tên"] != null)
                 dgv.Columns["Họ tên"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             if (dgv.Columns["CMND"] != null)
-                dgv.Columns["CMND"].Width = 130;
+                dgv.Columns["CMND"].HeaderText = "🔐 CMND";
             if (dgv.Columns["Điện thoại"] != null)
-                dgv.Columns["Điện thoại"].Width = 120;
+                dgv.Columns["Điện thoại"].HeaderText = "🔐 Điện thoại";
             if (dgv.Columns["Email"] != null)
-                dgv.Columns["Email"].Width = 200;
+                dgv.Columns["Email"].HeaderText = "🔐 Email";
             if (dgv.Columns["Địa chỉ"] != null)
-                dgv.Columns["Địa chỉ"].Width = 220;
+                dgv.Columns["Địa chỉ"].HeaderText = "🔐 Địa chỉ";
             if (dgv.Columns["Trạng thái"] != null)
                 dgv.Columns["Trạng thái"].Width = 100;
         }
 
         private void AddCustomerContextMenu(DataGridView dgv)
         {
-            ContextMenuStrip contextMenu = new ContextMenuStrip();
-
+            var contextMenu = new ContextMenuStrip();
             contextMenu.Items.AddRange(new ToolStripItem[]
             {
                 new ToolStripMenuItem("👁️ Xem chi tiết", null, (s, e) => ShowCustomerDetails(dgv)),
                 new ToolStripMenuItem("✏️ Chỉnh sửa", null, (s, e) => EditCustomer(dgv)),
                 new ToolStripMenuItem("🗑️ Khóa khách hàng", null, (s, e) => LockCustomer(dgv)),
+                new ToolStripMenuItem("❌ Xóa khách hàng", null, (s, e) => DeleteCustomer(dgv)),
                 new ToolStripSeparator(),
                 new ToolStripMenuItem("🔄 Làm mới", null, (s, e) => RefreshContent())
             });
-
             dgv.ContextMenuStrip = contextMenu;
+
+            // Ensure right-click selects the row
+            dgv.MouseDown += (s, e) =>
+            {
+                if (e.Button == MouseButtons.Right)
+                {
+                    var hit = dgv.HitTest(e.X, e.Y);
+                    if (hit.RowIndex >= 0)
+                    {
+                        dgv.ClearSelection();
+                        dgv.Rows[hit.RowIndex].Selected = true;
+                    }
+                }
+            };
         }
 
         private void ShowCustomerDetails(DataGridView dgv)
         {
-            if (dgv.SelectedRows.Count > 0)
-            {
-                string code = dgv.SelectedRows[0].Cells["Mã KH"].Value?.ToString();
-                if (!string.IsNullOrEmpty(code))
-                {
-                    var form = new FormCustomerDetails(code);
-                    form.ShowDialog();
-                }
-                else ShowInfo("Không tìm thấy mã khách hàng.");
-            }
-            else ShowInfo("Vui lòng chọn khách hàng để xem chi tiết.");
+            if (TryGetSelectedCustomerCode(dgv, out string code))
+                new FormCustomerDetails(code).ShowDialog();
+            else
+                ShowInfo("Vui lòng chọn khách hàng để xem chi tiết.");
         }
 
         private void EditCustomer(DataGridView dgv)
         {
-            if (dgv.SelectedRows.Count > 0)
+            if (TryGetSelectedCustomerCode(dgv, out string code))
             {
-                string code = dgv.SelectedRows[0].Cells["Mã KH"].Value?.ToString();
-                if (!string.IsNullOrEmpty(code))
-                {
-                    var form = new FormAddEditCustomer(true, code);
-                    if (form.ShowDialog() == DialogResult.OK)
-                        RefreshContent();
-                }
+                var form = new FormAddEditCustomer(true, code);
+                if (form.ShowDialog() == DialogResult.OK)
+                    RefreshContent();
             }
-            else ShowInfo("Vui lòng chọn khách hàng để chỉnh sửa.");
+            else
+                ShowInfo("Vui lòng chọn khách hàng để chỉnh sửa.");
         }
 
         private void LockCustomer(DataGridView dgv)
         {
-            if (dgv.SelectedRows.Count > 0)
+            if (TryGetSelectedCustomerCode(dgv, out string code) &&
+                ShowConfirmation($"Bạn có chắc muốn khóa khách hàng {code}?"))
             {
-                string code = dgv.SelectedRows[0].Cells["Mã KH"].Value?.ToString();
-                if (!string.IsNullOrEmpty(code))
+                if (customerDataAccess.LockCustomer(code))
                 {
-                    if (ShowConfirmation($"Bạn có chắc muốn khóa khách hàng {code}?"))
-                    {
-                        bool success = customerDataAccess.LockCustomer(code);
-                        if (success)
-                        {
-                            ShowInfo("Đã khóa khách hàng!");
-                            RefreshContent();
-                        }
-                        else
-                        {
-                            ShowError("Không thể khóa khách hàng!");
-                        }
-                    }
+                    ShowInfo("Đã khóa khách hàng!");
+                    RefreshContent();
+                }
+                else
+                {
+                    ShowError("Không thể khóa khách hàng!");
                 }
             }
             else ShowInfo("Vui lòng chọn khách hàng để khóa.");
         }
 
-        // Action methods
+        private void DeleteCustomer(DataGridView dgv)
+        {
+            if (TryGetSelectedCustomerCode(dgv, out string code) &&
+                ShowConfirmation($"Bạn có chắc chắn muốn xóa khách hàng {code}?\nThao tác này không thể hoàn tác."))
+            {
+                if (customerDataAccess.DeleteCustomer(code))
+                {
+                    ShowInfo("Đã xóa khách hàng thành công.");
+                    RefreshContent();
+                }
+                else
+                {
+                    ShowError("Không thể xóa khách hàng.");
+                }
+            }
+            else ShowInfo("Vui lòng chọn khách hàng để xóa.");
+        }
+
+        private void ShowEncryptedView()
+        {
+            if (ContentPanel.Controls.Find("dataGridView1", true).FirstOrDefault() is DataGridView dgv &&
+                dgv.SelectedRows.Count > 0)
+            {
+                string code = dgv.SelectedRows[0].Cells["Mã KH"].Value?.ToString();
+                if (!string.IsNullOrEmpty(code))
+                {
+                    var row = customerDataAccess.GetCustomerByCode(code);
+                    if (row != null)
+                    {
+                        new FormEncryptedDataViewer(
+                            row["id_number"].ToString(),
+                            row["phone"].ToString(),
+                            row["email"].ToString(),
+                            row["address"].ToString()
+                        ).ShowDialog();
+                    }
+                }
+            }
+            else
+            {
+                ShowInfo("Vui lòng chọn khách hàng để xem dữ liệu mã hóa.");
+            }
+        }
+
         private void ShowAddCustomerForm()
         {
             var form = new FormAddEditCustomer();
@@ -196,11 +236,8 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
             var form = new FormCustomerSearch();
             if (form.ShowDialog() == DialogResult.OK)
             {
-                string keyword = form.Keyword;
-                DataTable result = customerDataAccess.SearchCustomers(keyword);
-
-                var dgv = ContentPanel.Controls.Find("dataGridView1", true).FirstOrDefault() as DataGridView;
-                if (dgv != null)
+                var result = customerDataAccess.SearchCustomers(form.Keyword);
+                if (ContentPanel.Controls.Find("dataGridView1", true).FirstOrDefault() is DataGridView dgv)
                     dgv.DataSource = result;
             }
         }
@@ -208,10 +245,17 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
         private void ShowImportExcelForm() => ShowMessage("Import Excel chưa được cài đặt.");
         private void ShowExportDataForm() => ShowMessage("Export dữ liệu chưa được cài đặt.");
 
-        public override void RefreshContent()
+        private bool TryGetSelectedCustomerCode(DataGridView dgv, out string code)
         {
-            LoadContent();
-            ShowMessage("Dữ liệu khách hàng đã được làm mới!");
+            code = null;
+            if (dgv.SelectedRows.Count > 0)
+            {
+                code = dgv.SelectedRows[0].Cells["Mã KH"].Value?.ToString();
+                return !string.IsNullOrEmpty(code);
+            }
+            return false;
         }
+
+        public override void RefreshContent() => LoadContent();
     }
 }

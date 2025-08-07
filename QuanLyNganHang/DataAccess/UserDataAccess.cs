@@ -83,35 +83,55 @@ namespace QuanLyNganHang.DataAccess
 
         public DataRow GetUserById(int employeeId)
         {
-            using (var conn = Database.Get_Connect())
+            try
             {
-                if (conn.State != ConnectionState.Open)
-                    conn.Open();
+                string sql = @"
+            SELECT 
+                e.employee_id,
+                e.full_name,
+                e.email,
+                e.phone,
+                e.position,
+                e.branch_id,
+                su.username,
+                su.username as oracle_user,
+                er.role_id,
+                r.role_name,
+                b.branch_name,
+                b.branch_code
+            FROM ADMIN_NGANHANG.employees e
+            LEFT JOIN ADMIN_NGANHANG.system_users su ON e.employee_id = su.employee_id
+            LEFT JOIN ADMIN_NGANHANG.employee_roles er ON e.employee_id = er.employee_id
+            LEFT JOIN ADMIN_NGANHANG.roles r ON er.role_id = r.role_id
+            LEFT JOIN ADMIN_NGANHANG.branches b ON e.branch_id = b.branch_id
+            WHERE e.employee_id = :employeeId";
 
-                using (var cmd = new OracleCommand("ADMIN_NGANHANG.pkg_user_management.pro_get_user_by_id", conn))
+                using (var conn = Database.Get_Connect())
                 {
-                    cmd.CommandType = CommandType.StoredProcedure;
+                    if (conn.State != ConnectionState.Open)
+                        conn.Open();
 
-                    cmd.Parameters.Add("p_employee_id", OracleDbType.Int32).Value = employeeId;
-
-                    var refCursor = new OracleParameter("Result", OracleDbType.RefCursor)
+                    using (var cmd = new OracleCommand(sql, conn))
                     {
-                        Direction = ParameterDirection.Output
-                    };
-                    cmd.Parameters.Add(refCursor);
+                        cmd.BindByName = true;
+                        cmd.Parameters.Add("employeeId", OracleDbType.Int32).Value = employeeId;
 
-                    using (var adapter = new OracleDataAdapter(cmd))
-                    {
-                        DataTable dt = new DataTable();
-                        adapter.Fill(dt);
-                        if (dt.Rows.Count > 0)
-                            return dt.Rows[0];
-                        else
-                            return null;
+                        using (var adapter = new OracleDataAdapter(cmd))
+                        {
+                            DataTable dt = new DataTable();
+                            adapter.Fill(dt);
+
+                            return dt.Rows.Count > 0 ? dt.Rows[0] : null;
+                        }
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                throw new Exception("Lỗi khi lấy thông tin user: " + ex.Message);
+            }
         }
+
         public bool Pro_DropUserById(int employeeId)
         {
             try
@@ -140,62 +160,108 @@ namespace QuanLyNganHang.DataAccess
         {
             using (var conn = Database.Get_Connect())
             {
-                conn.Open();
+                if (conn.State != ConnectionState.Open)
+                    conn.Open();
+
                 using (var tran = conn.BeginTransaction())
                 {
                     try
                     {
-                        using (var cmd = new OracleCommand("ADMIN_NGANHANG.pkg_user_management.pro_update_user", conn))
+                        // 1. Cập nhật thông tin employee
+                        string updateEmployeeSql = @"
+                    UPDATE ADMIN_NGANHANG.employees 
+                    SET full_name = :fullName,
+                        email = :email,
+                        phone = :phone,
+                        position = :position,
+                        branch_id = :branchId
+                    WHERE employee_id = :employeeId";
+
+                        using (var cmd = new OracleCommand(updateEmployeeSql, conn))
                         {
                             cmd.Transaction = tran;
-                            cmd.CommandType = CommandType.StoredProcedure;
+                            cmd.BindByName = true;
 
-                            cmd.Parameters.Add("p_employee_id", OracleDbType.Int32).Value = employeeId;
-                            cmd.Parameters.Add("p_username", OracleDbType.Varchar2).Value = username;
-                            cmd.Parameters.Add("p_password_hash", OracleDbType.Varchar2).Value = HashHelper.HashPassword(password);
-                            cmd.Parameters.Add("p_oracle_user", OracleDbType.Varchar2).Value = string.IsNullOrEmpty(oracleUser) ? DBNull.Value : (object)oracleUser;
-                            cmd.Parameters.Add("p_full_name", OracleDbType.Varchar2).Value = fullName;
-                            cmd.Parameters.Add("p_email", OracleDbType.Varchar2).Value = email;
-                            cmd.Parameters.Add("p_phone", OracleDbType.Varchar2).Value = phone;
-                            cmd.Parameters.Add("p_position", OracleDbType.Varchar2).Value = position;
-                            cmd.Parameters.Add("p_branch_id", OracleDbType.Int32).Value = branchId;
-                            cmd.Parameters.Add("p_role_id", OracleDbType.Int32).Value = roleId;
-
-                            var p_success = new OracleParameter("p_success", OracleDbType.Int32)
-                            {
-                                Direction = ParameterDirection.Output
-                            };
-                            cmd.Parameters.Add(p_success);
-
-                            var p_error_msg = new OracleParameter("p_error_msg", OracleDbType.Varchar2, 4000)
-                            {
-                                Direction = ParameterDirection.Output
-                            };
-                            cmd.Parameters.Add(p_error_msg);
+                            cmd.Parameters.Add("fullName", OracleDbType.NVarchar2).Value = fullName;
+                            cmd.Parameters.Add("email", OracleDbType.Varchar2).Value = email ?? (object)DBNull.Value;
+                            cmd.Parameters.Add("phone", OracleDbType.Varchar2).Value = phone ?? (object)DBNull.Value;
+                            cmd.Parameters.Add("position", OracleDbType.NVarchar2).Value = position ?? (object)DBNull.Value;
+                            cmd.Parameters.Add("branchId", OracleDbType.Int32).Value = branchId;
+                            cmd.Parameters.Add("employeeId", OracleDbType.Int32).Value = employeeId;
 
                             cmd.ExecuteNonQuery();
+                        }
 
-                            int success = (p_success.Value == DBNull.Value) ? 0 : Convert.ToInt32(((OracleDecimal)p_success.Value).ToInt32());
-                            string errMsg = p_error_msg.Value?.ToString();
+                        // 2. Cập nhật system_users (nếu có thay đổi mật khẩu)
+                        if (!string.IsNullOrEmpty(password))
+                        {
+                            string updateUserSql = @"
+                        UPDATE ADMIN_NGANHANG.system_users 
+                        SET password_hash = :passwordHash
+                        WHERE employee_id = :employeeId";
 
-                            if (success == 1)
+                            using (var cmd = new OracleCommand(updateUserSql, conn))
                             {
-                                tran.Commit();
-                                return true;
-                            }
-                            else
-                            {
-                                tran.Rollback();
-                                MessageBox.Show("Lỗi khi cập nhật user: " + errMsg);
-                                return false;
+                                cmd.Transaction = tran;
+                                cmd.BindByName = true;
+
+                                cmd.Parameters.Add("passwordHash", OracleDbType.Varchar2).Value = HashHelper.HashPassword(password);
+                                cmd.Parameters.Add("employeeId", OracleDbType.Int32).Value = employeeId;
+
+                                cmd.ExecuteNonQuery();
                             }
                         }
+
+                        // 3. Cập nhật oracle user (nếu có)
+                        if (!string.IsNullOrEmpty(oracleUser))
+                        {
+                            string updateOracleUserSql = @"
+                        UPDATE ADMIN_NGANHANG.system_users 
+                        SET username = :oracleUser
+                        WHERE employee_id = :employeeId";
+
+                            using (var cmd = new OracleCommand(updateOracleUserSql, conn))
+                            {
+                                cmd.Transaction = tran;
+                                cmd.BindByName = true;
+
+                                cmd.Parameters.Add("oracleUser", OracleDbType.Varchar2).Value = oracleUser;
+                                cmd.Parameters.Add("employeeId", OracleDbType.Int32).Value = employeeId;
+
+                                cmd.ExecuteNonQuery();
+                            }
+                        }
+
+                        // 4. Cập nhật role - xóa role cũ và thêm role mới
+                        string deleteRoleSql = "DELETE FROM ADMIN_NGANHANG.employee_roles WHERE employee_id = :employeeId";
+                        using (var cmd = new OracleCommand(deleteRoleSql, conn))
+                        {
+                            cmd.Transaction = tran;
+                            cmd.BindByName = true;
+                            cmd.Parameters.Add("employeeId", OracleDbType.Int32).Value = employeeId;
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        string insertRoleSql = @"
+                    INSERT INTO ADMIN_NGANHANG.employee_roles (employee_id, role_id, assigned_date)
+                    VALUES (:employeeId, :roleId, SYSDATE)";
+
+                        using (var cmd = new OracleCommand(insertRoleSql, conn))
+                        {
+                            cmd.Transaction = tran;
+                            cmd.BindByName = true;
+                            cmd.Parameters.Add("employeeId", OracleDbType.Int32).Value = employeeId;
+                            cmd.Parameters.Add("roleId", OracleDbType.Int32).Value = roleId;
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        tran.Commit();
+                        return true;
                     }
                     catch (Exception ex)
                     {
                         tran.Rollback();
-                        MessageBox.Show("Lỗi khi cập nhật: " + ex.Message);
-                        return false;
+                        throw new Exception("Lỗi khi cập nhật thông tin người dùng: " + ex.Message);
                     }
                 }
             }

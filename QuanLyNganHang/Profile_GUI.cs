@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,13 +17,10 @@ namespace QuanLyNganHang
         private OracleConnection conn;
         private Profile Proc;
 
-        // UI Components
+        // UI Components - Simplified
         private Panel headerPanel;
         private Panel mainPanel;
-        private Panel footerPanel;
-        private Panel controlPanel;
         private Label lblTitle;
-        private Label lblSubtitle;
         private Label lblProfileSelect;
         private ComboBox cmb_profile_name;
         private Button btnRefresh;
@@ -45,7 +43,7 @@ namespace QuanLyNganHang
                 conn = Database.Get_Connect();
                 if (conn == null)
                 {
-                    ShowStatusMessage("Lỗi: Không thể kết nối cơ sở dữ liệu!", StatusType.Error);
+                    ShowStatusMessage("❌ Lỗi: Không thể kết nối cơ sở dữ liệu!", StatusType.Error);
                     return;
                 }
 
@@ -54,154 +52,57 @@ namespace QuanLyNganHang
             }
             catch (Exception ex)
             {
-                ShowStatusMessage($"Lỗi khởi tạo: {ex.Message}", StatusType.Error);
+                ShowStatusMessage($"❌ Lỗi khởi tạo: {ex.Message}", StatusType.Error);
             }
         }
 
         private void InitializeCustomComponents()
         {
-            // Form properties
+            // Form properties - Simplified
             this.Size = new Size(1200, 800);
-            this.FormBorderStyle = FormBorderStyle.None;
+            this.FormBorderStyle = FormBorderStyle.Sizable;
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.BackColor = Color.FromArgb(240, 244, 247);
+            this.BackColor = Color.FromArgb(245, 247, 250);
+            this.Font = new Font("Segoe UI", 9F);
+            this.Text = "🔐 Quản lý Profile Oracle";
+            this.MinimumSize = new Size(1000, 600);
 
-            CreateHeaderPanel();
             CreateMainPanel();
-            CreateFooterPanel();
-
-            // Enable form dragging
-            EnableFormDragging();
         }
-
-        private void CreateHeaderPanel()
-        {
-            headerPanel = new Panel
-            {
-                Size = new Size(this.Width, 80),
-                Location = new Point(0, 0),
-                BackColor = Color.FromArgb(31, 81, 139),
-                Dock = DockStyle.Top
-            };
-
-            // Gradient effect for header
-            headerPanel.Paint += (s, e) =>
-            {
-                using (var brush = new System.Drawing.Drawing2D.LinearGradientBrush(
-                    headerPanel.ClientRectangle,
-                    Color.FromArgb(31, 81, 139),
-                    Color.FromArgb(41, 98, 159),
-                    System.Drawing.Drawing2D.LinearGradientMode.Horizontal))
-                {
-                    e.Graphics.FillRectangle(brush, headerPanel.ClientRectangle);
-                }
-            };
-
-            lblTitle = new Label
-            {
-                Text = "🔐 QUẢN LÝ PROFILE ORACLE",
-                Font = new Font("Segoe UI", 18, FontStyle.Bold),
-                ForeColor = Color.White,
-                AutoSize = false,
-                Size = new Size(600, 35),
-                Location = new Point(30, 15),
-                TextAlign = ContentAlignment.MiddleLeft
-            };
-
-            lblSubtitle = new Label
-            {
-                Text = "Quản lý các profile bảo mật và giới hạn tài nguyên hệ thống",
-                Font = new Font("Segoe UI", 11),
-                ForeColor = Color.LightBlue,
-                AutoSize = false,
-                Size = new Size(600, 25),
-                Location = new Point(30, 45),
-                TextAlign = ContentAlignment.MiddleLeft
-            };
-
-            // Close button in header
-            Button btnHeaderClose = new Button
-            {
-                Text = "✖",
-                Size = new Size(40, 40),
-                Location = new Point(this.Width - 60, 20),
-                BackColor = Color.FromArgb(231, 76, 60),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 14, FontStyle.Bold),
-                Cursor = Cursors.Hand,
-                Anchor = AnchorStyles.Top | AnchorStyles.Right
-            };
-            btnHeaderClose.FlatAppearance.BorderSize = 0;
-            btnHeaderClose.Click += (s, e) => this.Close();
-
-            // Minimize button
-            Button btnMinimize = new Button
-            {
-                Text = "−",
-                Size = new Size(40, 40),
-                Location = new Point(this.Width - 105, 20),
-                BackColor = Color.FromArgb(241, 196, 15),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 16, FontStyle.Bold),
-                Cursor = Cursors.Hand,
-                Anchor = AnchorStyles.Top | AnchorStyles.Right
-            };
-            btnMinimize.FlatAppearance.BorderSize = 0;
-            btnMinimize.Click += (s, e) => this.WindowState = FormWindowState.Minimized;
-
-            headerPanel.Controls.AddRange(new Control[] { lblTitle, lblSubtitle, btnHeaderClose, btnMinimize });
-            this.Controls.Add(headerPanel);
-        }
-
         private void CreateMainPanel()
         {
             mainPanel = new Panel
             {
-                Location = new Point(0, 80),
-                Size = new Size(this.Width, this.Height - 140),
+                Location = new Point(0, 70),
+                Size = new Size(this.Width, this.Height - 70),
                 BackColor = Color.White,
                 Dock = DockStyle.Fill,
-                Padding = new Padding(30)
+                Padding = new Padding(20)
             };
 
-            CreateControlPanel();
+            CreateControlsPanel();
             CreateDataGridView();
             CreateStatusPanel();
 
             this.Controls.Add(mainPanel);
         }
 
-        private void CreateControlPanel()
+        private void CreateControlsPanel()
         {
-            controlPanel = new Panel
+            Panel controlsPanel = new Panel
             {
-                Location = new Point(30, 20),
-                Size = new Size(mainPanel.Width - 60, 100),
+                Location = new Point(20, 20),
+                Size = new Size(mainPanel.Width - 40, 80),
                 BackColor = Color.FromArgb(248, 249, 250),
-                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
-            };
-
-            // Add border radius effect
-            controlPanel.Paint += (s, e) =>
-            {
-                var rect = controlPanel.ClientRectangle;
-                using (var brush = new SolidBrush(Color.FromArgb(248, 249, 250)))
-                {
-                    e.Graphics.FillRectangle(brush, rect);
-                }
-                using (var pen = new Pen(Color.FromArgb(220, 223, 230), 1))
-                {
-                    e.Graphics.DrawRectangle(pen, 0, 0, rect.Width - 1, rect.Height - 1);
-                }
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+                BorderStyle = BorderStyle.FixedSingle
             };
 
             // Profile selection
             lblProfileSelect = new Label
             {
-                Text = "📋 Chọn Profile để xem chi tiết:",
-                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                Text = "📋 Chọn Profile:",
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
                 ForeColor = Color.FromArgb(52, 73, 94),
                 Location = new Point(20, 15),
                 AutoSize = true
@@ -209,63 +110,55 @@ namespace QuanLyNganHang
 
             cmb_profile_name = new ComboBox
             {
-                Location = new Point(20, 45),
-                Size = new Size(280, 35),
-                Font = new Font("Segoe UI", 11),
+                Location = new Point(20, 35),
+                Size = new Size(250, 25),
+                Font = new Font("Segoe UI", 10),
                 DropDownStyle = ComboBoxStyle.DropDownList,
-                BackColor = Color.White,
-                FlatStyle = FlatStyle.Flat
+                BackColor = Color.White
             };
             cmb_profile_name.SelectedIndexChanged += cmb_profile_name_SelectedIndexChanged;
 
-            // Buttons
-            btnRefresh = CreateStyledButton("🔄 Làm mới", new Point(320, 45), new Size(120, 35), Color.FromArgb(52, 152, 219));
+            // Buttons in a row
+            btnRefresh = CreateSimpleButton("🔄 Làm mới", new Point(290, 35), Color.FromArgb(108, 117, 125));
             btnRefresh.Click += BtnRefresh_Click;
-
-            btnCreateProfile = CreateStyledButton("➕ Tạo Profile", new Point(460, 45), new Size(140, 35), Color.FromArgb(46, 204, 113));
-            btnCreateProfile.Click += BtnCreateProfile_Click;
-
-            btnEditProfile = CreateStyledButton("✏️ Sửa Profile", new Point(620, 45), new Size(130, 35), Color.FromArgb(241, 196, 15));
-            btnEditProfile.Click += BtnEditProfile_Click;
-
-            btnDeleteProfile = CreateStyledButton("🗑️ Xóa Profile", new Point(770, 45), new Size(130, 35), Color.FromArgb(231, 76, 60));
+            btnDeleteProfile = CreateSimpleButton("🗑️ Xóa", new Point(620, 35), Color.FromArgb(220, 53, 69));
             btnDeleteProfile.Click += BtnDeleteProfile_Click;
 
-            // Record count label
+            // Record count
             lblRecordCount = new Label
             {
-                Text = "Tổng số: 0 bản ghi",
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                ForeColor = Color.FromArgb(127, 140, 141),
-                Location = new Point(920, 50),
+                Text = "📊 Tổng: 0 bản ghi",
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                ForeColor = Color.FromArgb(108, 117, 125),
+                Location = new Point(750, 40),
                 AutoSize = true,
                 Anchor = AnchorStyles.Top | AnchorStyles.Right
             };
 
-            controlPanel.Controls.AddRange(new Control[] {
-                lblProfileSelect, cmb_profile_name, btnRefresh,
-                btnCreateProfile, btnEditProfile, btnDeleteProfile, lblRecordCount
+            controlsPanel.Controls.AddRange(new Control[] {
+                lblProfileSelect, cmb_profile_name, btnRefresh, btnCreateProfile,
+                btnEditProfile, btnDeleteProfile, lblRecordCount
             });
 
-            mainPanel.Controls.Add(controlPanel);
+            mainPanel.Controls.Add(controlsPanel);
         }
 
-        private Button CreateStyledButton(string text, Point location, Size size, Color backColor)
+        private Button CreateSimpleButton(string text, Point location, Color backColor)
         {
             Button btn = new Button
             {
                 Text = text,
                 Location = location,
-                Size = size,
+                Size = new Size(100, 30),
                 BackColor = backColor,
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
                 Cursor = Cursors.Hand
             };
             btn.FlatAppearance.BorderSize = 0;
 
-            // Hover effects
+            // Simple hover effect
             btn.MouseEnter += (s, e) => btn.BackColor = ChangeColorBrightness(backColor, -0.1f);
             btn.MouseLeave += (s, e) => btn.BackColor = backColor;
 
@@ -276,10 +169,10 @@ namespace QuanLyNganHang
         {
             dgv_profile = new DataGridView
             {
-                Location = new Point(30, 140),
-                Size = new Size(mainPanel.Width - 60, mainPanel.Height - 200),
+                Location = new Point(20, 120),
+                Size = new Size(mainPanel.Width - 40, mainPanel.Height - 180),
                 BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.None,
+                BorderStyle = BorderStyle.FixedSingle,
                 CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal,
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
                 DefaultCellStyle = new DataGridViewCellStyle
@@ -288,20 +181,19 @@ namespace QuanLyNganHang
                     ForeColor = Color.FromArgb(52, 73, 94),
                     SelectionBackColor = Color.FromArgb(52, 152, 219),
                     SelectionForeColor = Color.White,
-                    Font = new Font("Segoe UI", 10),
-                    Padding = new Padding(8, 4, 8, 4)
+                    Font = new Font("Segoe UI", 9),
+                    Padding = new Padding(8, 5, 8, 5)
                 },
                 ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle
                 {
                     BackColor = Color.FromArgb(52, 73, 94),
                     ForeColor = Color.White,
-                    Font = new Font("Segoe UI", 11, FontStyle.Bold),
-                    Alignment = DataGridViewContentAlignment.MiddleCenter,
-                    Padding = new Padding(8, 8, 8, 8)
+                    Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                    Alignment = DataGridViewContentAlignment.MiddleCenter
                 },
                 ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize,
-                ColumnHeadersHeight = 50,
-                RowTemplate = { Height = 40 },
+                ColumnHeadersHeight = 40,
+                RowTemplate = { Height = 35 },
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
                 AllowUserToAddRows = false,
                 AllowUserToDeleteRows = false,
@@ -312,7 +204,7 @@ namespace QuanLyNganHang
                 GridColor = Color.FromArgb(220, 220, 220)
             };
 
-            // Alternating row colors
+            // Simple alternating row colors
             dgv_profile.AlternatingRowsDefaultCellStyle = new DataGridViewCellStyle
             {
                 BackColor = Color.FromArgb(248, 249, 250),
@@ -329,8 +221,8 @@ namespace QuanLyNganHang
             // Progress bar
             progressBar = new ProgressBar
             {
-                Location = new Point(30, mainPanel.Height - 35),
-                Size = new Size(mainPanel.Width - 60, 8),
+                Location = new Point(20, mainPanel.Height - 45),
+                Size = new Size(mainPanel.Width - 40, 5),
                 Style = ProgressBarStyle.Marquee,
                 Visible = false,
                 Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
@@ -339,61 +231,39 @@ namespace QuanLyNganHang
             // Status label
             lblStatus = new Label
             {
-                Text = "Sẵn sàng",
+                Text = "✅ Sẵn sàng",
                 Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                ForeColor = Color.FromArgb(46, 204, 113),
-                Location = new Point(30, mainPanel.Height - 20),
+                ForeColor = Color.FromArgb(40, 167, 69),
+                Location = new Point(20, mainPanel.Height - 25),
                 AutoSize = true,
                 Anchor = AnchorStyles.Bottom | AnchorStyles.Left
             };
 
-            mainPanel.Controls.AddRange(new Control[] { progressBar, lblStatus });
-        }
-
-        private void CreateFooterPanel()
-        {
-            footerPanel = new Panel
-            {
-                Size = new Size(this.Width, 60),
-                BackColor = Color.FromArgb(44, 62, 80),
-                Dock = DockStyle.Bottom
-            };
-
-            Label footerLabel = new Label
-            {
-                Text = "© 2025 Hệ thống Quản lý Ngân hàng - Profile Management v1.0",
-                Font = new Font("Segoe UI", 9),
-                ForeColor = Color.LightGray,
-                AutoSize = false,
-                Size = new Size(500, 30),
-                Location = new Point(30, 15),
-                TextAlign = ContentAlignment.MiddleLeft
-            };
-
+            // Close button at bottom
             btnClose = new Button
             {
                 Text = "❌ Đóng",
-                Size = new Size(120, 35),
-                Location = new Point(this.Width - 150, 12),
+                Size = new Size(100, 30),
+                Location = new Point(mainPanel.Width - 140, mainPanel.Height - 35),
                 BackColor = Color.FromArgb(231, 76, 60),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
                 Cursor = Cursors.Hand,
                 Anchor = AnchorStyles.Bottom | AnchorStyles.Right
             };
             btnClose.FlatAppearance.BorderSize = 0;
             btnClose.Click += (s, e) => this.Close();
 
-            footerPanel.Controls.AddRange(new Control[] { footerLabel, btnClose });
-            this.Controls.Add(footerPanel);
+            mainPanel.Controls.AddRange(new Control[] { progressBar, lblStatus, btnClose });
         }
 
+        // Data loading methods remain the same
         private async void Load_Combobox()
         {
             try
             {
-                ShowLoading(true, "Đang tải danh sách profile...");
+                ShowLoading(true, "🔄 Đang tải danh sách profile...");
 
                 cmb_profile_name.Items.Clear();
 
@@ -409,19 +279,23 @@ namespace QuanLyNganHang
                             {
                                 cmb_profile_name.Items.Add(r[0]);
                             }
-                            cmb_profile_name.SelectedIndex = 0;
-                            ShowStatusMessage($"Đã tải {read.Rows.Count} profile thành công!", StatusType.Success);
+                            if (cmb_profile_name.Items.Count > 0)
+                            {
+                                cmb_profile_name.SelectedIndex = 0;
+                            }
+
+                            ShowStatusMessage($"✅ Đã tải {read.Rows.Count} profile thành công!", StatusType.Success);
                         }
                         else
                         {
-                            ShowStatusMessage("Không tìm thấy profile nào!", StatusType.Warning);
+                            ShowStatusMessage("⚠️ Không tìm thấy profile nào!", StatusType.Warning);
                         }
                     }));
                 });
             }
             catch (Exception ex)
             {
-                ShowStatusMessage($"Lỗi khi tải danh sách profile: {ex.Message}", StatusType.Error);
+                ShowStatusMessage($"❌ Lỗi khi tải danh sách profile: {ex.Message}", StatusType.Error);
             }
             finally
             {
@@ -435,7 +309,7 @@ namespace QuanLyNganHang
 
             try
             {
-                ShowLoading(true, "Đang tải chi tiết profile...");
+                ShowLoading(true, "📊 Đang tải chi tiết profile...");
 
                 string profile = cmb_profile_name.SelectedItem.ToString();
 
@@ -449,18 +323,18 @@ namespace QuanLyNganHang
 
                         if (profileData != null && profileData.Rows.Count > 0)
                         {
-                            ShowStatusMessage($"Đã tải profile '{profile}' thành công!", StatusType.Success);
+                            ShowStatusMessage($"✅ Đã tải profile '{profile}' với {profileData.Rows.Count} tham số!", StatusType.Success);
                         }
                         else
                         {
-                            ShowStatusMessage($"Không có dữ liệu cho profile '{profile}'", StatusType.Warning);
+                            ShowStatusMessage($"⚠️ Không có dữ liệu cho profile '{profile}'", StatusType.Warning);
                         }
                     }));
                 });
             }
             catch (Exception ex)
             {
-                ShowStatusMessage($"Lỗi khi tải chi tiết profile: {ex.Message}", StatusType.Error);
+                ShowStatusMessage($"❌ Lỗi khi tải chi tiết profile: {ex.Message}", StatusType.Error);
             }
             finally
             {
@@ -470,10 +344,7 @@ namespace QuanLyNganHang
 
         private void Dgv_profile_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
         {
-            // Update record count
-            lblRecordCount.Text = $"Tổng số: {dgv_profile.Rows.Count} bản ghi";
-
-            // Format columns
+            lblRecordCount.Text = $"📊 Tổng: {dgv_profile.Rows.Count} tham số";
             FormatDataGridColumns();
         }
 
@@ -481,10 +352,8 @@ namespace QuanLyNganHang
         {
             if (dgv_profile.Columns.Count == 0) return;
 
-            for (int i = 0; i < dgv_profile.Columns.Count; i++)
+            foreach (DataGridViewColumn col in dgv_profile.Columns)
             {
-                var col = dgv_profile.Columns[i];
-
                 switch (col.Name.ToUpper())
                 {
                     case "PROFILE":
@@ -492,8 +361,8 @@ namespace QuanLyNganHang
                         col.Width = 180;
                         break;
                     case "RESOURCE_NAME":
-                        col.HeaderText = "Tài nguyên";
-                        col.Width = 250;
+                        col.HeaderText = "Tên tài nguyên";
+                        col.Width = 280;
                         break;
                     case "RESOURCE_TYPE":
                         col.HeaderText = "Loại tài nguyên";
@@ -501,16 +370,13 @@ namespace QuanLyNganHang
                         break;
                     case "LIMIT":
                         col.HeaderText = "Giới hạn";
-                        col.Width = 200;
-                        break;
-                    default:
                         col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
                         break;
                 }
             }
         }
 
-        // Event handlers
+        // Event handlers - simplified
         private void BtnRefresh_Click(object sender, EventArgs e)
         {
             string currentSelection = cmb_profile_name.SelectedItem?.ToString();
@@ -521,25 +387,6 @@ namespace QuanLyNganHang
                 cmb_profile_name.SelectedItem = currentSelection;
             }
         }
-
-        private void BtnCreateProfile_Click(object sender, EventArgs e)
-        {
-            ShowStatusMessage("Chức năng tạo profile đang được phát triển", StatusType.Info);
-        }
-
-        private void BtnEditProfile_Click(object sender, EventArgs e)
-        {
-            if (cmb_profile_name.SelectedItem != null)
-            {
-                string profileName = cmb_profile_name.SelectedItem.ToString();
-                ShowStatusMessage($"Chức năng chỉnh sửa profile '{profileName}' đang được phát triển", StatusType.Info);
-            }
-            else
-            {
-                ShowStatusMessage("Vui lòng chọn profile cần chỉnh sửa!", StatusType.Warning);
-            }
-        }
-
         private void BtnDeleteProfile_Click(object sender, EventArgs e)
         {
             if (cmb_profile_name.SelectedItem != null)
@@ -548,12 +395,13 @@ namespace QuanLyNganHang
 
                 if (profileName.ToUpper() == "DEFAULT")
                 {
-                    ShowStatusMessage("Không thể xóa profile DEFAULT!", StatusType.Warning);
+                    ShowStatusMessage("🚫 Không thể xóa profile DEFAULT!", StatusType.Warning);
                     return;
                 }
 
                 var result = MessageBox.Show(
-                    $"Bạn có chắc chắn muốn xóa profile '{profileName}'?\n\nLưu ý: Hành động này không thể hoàn tác!",
+                    $"Bạn có chắc chắn muốn xóa profile '{profileName}'?\n\n" +
+                    "Cảnh báo: Hành động này không thể hoàn tác!",
                     "Xác nhận xóa Profile",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Warning,
@@ -562,25 +410,21 @@ namespace QuanLyNganHang
 
                 if (result == DialogResult.Yes)
                 {
-                    ShowStatusMessage("Chức năng xóa profile đang được phát triển", StatusType.Info);
+                    ShowStatusMessage("🚧 Chức năng xóa profile đang được phát triển", StatusType.Info);
                 }
             }
             else
             {
-                ShowStatusMessage("Vui lòng chọn profile cần xóa!", StatusType.Warning);
+                ShowStatusMessage("⚠️ Vui lòng chọn profile cần xóa!", StatusType.Warning);
             }
         }
 
-        // Utility methods
         private void ShowLoading(bool show, string message = "")
         {
             progressBar.Visible = show;
-            if (show)
+            if (show && !string.IsNullOrEmpty(message))
             {
-                if (!string.IsNullOrEmpty(message))
-                {
-                    ShowStatusMessage(message, StatusType.Info);
-                }
+                ShowStatusMessage(message, StatusType.Info);
             }
         }
 
@@ -591,19 +435,19 @@ namespace QuanLyNganHang
             switch (type)
             {
                 case StatusType.Success:
-                    color = Color.FromArgb(46, 204, 113);
+                    color = Color.FromArgb(40, 167, 69);
                     break;
                 case StatusType.Warning:
-                    color = Color.FromArgb(241, 196, 15);
+                    color = Color.FromArgb(255, 193, 7);
                     break;
                 case StatusType.Error:
-                    color = Color.FromArgb(231, 76, 60);
+                    color = Color.FromArgb(220, 53, 69);
                     break;
                 case StatusType.Info:
-                    color = Color.FromArgb(52, 152, 219);
+                    color = Color.FromArgb(23, 162, 184);
                     break;
                 default:
-                    color = Color.Black;
+                    color = Color.FromArgb(108, 117, 125);
                     break;
             }
             lblStatus.ForeColor = color;
@@ -613,8 +457,8 @@ namespace QuanLyNganHang
             hideTimer.Tick += (s, e) =>
             {
                 hideTimer.Stop();
-                lblStatus.Text = "Sẵn sàng";
-                lblStatus.ForeColor = Color.FromArgb(46, 204, 113);
+                lblStatus.Text = "✅ Sẵn sàng";
+                lblStatus.ForeColor = Color.FromArgb(40, 167, 69);
             };
             hideTimer.Start();
         }
@@ -642,54 +486,12 @@ namespace QuanLyNganHang
             return Color.FromArgb(color.A, (int)red, (int)green, (int)blue);
         }
 
-        private void EnableFormDragging()
-        {
-            bool mouseDown = false;
-            Point mouseLocation = Point.Empty; // Initialize to avoid CS0165
-
-            this.MouseDown += (s, e) =>
-            {
-                mouseDown = true;
-                mouseLocation = e.Location;
-            };
-
-            this.MouseMove += (s, e) =>
-            {
-                if (mouseDown)
-                {
-                    this.Location = new Point(
-                        this.Location.X + e.X - mouseLocation.X,
-                        this.Location.Y + e.Y - mouseLocation.Y);
-                }
-            };
-
-            this.MouseUp += (s, e) => mouseDown = false;
-
-            // Also enable dragging from header panel
-            headerPanel.MouseDown += (s, e) =>
-            {
-                mouseDown = true;
-                mouseLocation = e.Location;
-            };
-
-            headerPanel.MouseMove += (s, e) =>
-            {
-                if (mouseDown)
-                {
-                    this.Location = new Point(
-                        this.Location.X + e.X - mouseLocation.X,
-                        this.Location.Y + e.Y - mouseLocation.Y);
-                }
-            };
-
-            headerPanel.MouseUp += (s, e) => mouseDown = false;
-        }
-
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             try
             {
                 dgv_profile.DataSource = null;
+                conn?.Close();
             }
             catch { }
 

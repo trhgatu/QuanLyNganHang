@@ -1,4 +1,5 @@
 ﻿using QuanLyNganHang.DataAccess;
+using QuanLyNganHang.Forms.Transaction;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -73,8 +74,6 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
             {
                 ("Nạp tiền", DashboardConstants.Colors.Success, (Action)ShowDepositForm),
                 ("Rút tiền", DashboardConstants.Colors.Danger, (Action)ShowWithdrawForm),
-                ("Chuyển khoản", DashboardConstants.Colors.Info, (Action)ShowTransferForm),
-                ("Duyệt GD", DashboardConstants.Colors.Warning, (Action)ShowApproveTransactionForm),
                 ("Báo cáo GD", DashboardConstants.Colors.Primary, (Action)ShowTransactionReportForm),
                 ("Làm mới", DashboardConstants.Colors.Info, (Action)RefreshContent)
             });
@@ -181,10 +180,7 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
             {
                 new ToolStripMenuItem("🔍 Xem chi tiết", null, (s, e) => ViewTransactionDetails(dgv)),
                 new ToolStripMenuItem("📝 Chỉnh sửa", null, (s, e) => EditSelectedTransaction(dgv)),
-                new ToolStripMenuItem("✅ Duyệt GD", null, (s, e) => ApproveTransaction(dgv)),
-                new ToolStripMenuItem("❌ Từ chối GD", null, (s, e) => RejectTransaction(dgv)),
                 new ToolStripSeparator(),
-                new ToolStripMenuItem("📄 In biên lai", null, (s, e) => PrintReceipt(dgv)),
                 new ToolStripMenuItem("🔄 Làm mới", null, (s, e) => RefreshContent())
             });
 
@@ -198,16 +194,23 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                 var selectedRow = dgv.SelectedRows[0];
                 string transactionId = selectedRow.Cells["TransactionID"]?.Value?.ToString() ??
                                      selectedRow.Cells["TransactionCode"]?.Value?.ToString();
-                string transactionType = selectedRow.Cells["TransactionType"]?.Value?.ToString();
-                string amount = selectedRow.Cells["Amount"]?.Value?.ToString();
 
-                ShowMessage($"Chi tiết giao dịch:\nMã GD: {transactionId}\nLoại: {transactionType}\nSố tiền: {amount}");
+                if (!string.IsNullOrEmpty(transactionId))
+                {
+                    var detailForm = new TransactionDetailForm(transactionId);
+                    detailForm.ShowDialog();
+                }
+                else
+                {
+                    ShowInfo("Không thể xác định mã giao dịch!");
+                }
             }
             else
             {
                 ShowInfo("Vui lòng chọn một giao dịch để xem chi tiết!");
             }
         }
+
 
         private void EditSelectedTransaction(DataGridView dgv)
         {
@@ -233,55 +236,7 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
             }
         }
 
-        private void ApproveTransaction(DataGridView dgv)
-        {
-            if (dgv.SelectedRows.Count > 0)
-            {
-                var selectedRow = dgv.SelectedRows[0];
-                string transactionId = selectedRow.Cells["TransactionID"]?.Value?.ToString() ??
-                                     selectedRow.Cells["TransactionCode"]?.Value?.ToString();
-                string status = selectedRow.Cells["Status"]?.Value?.ToString();
-
-                if (status != "Đang xử lý")
-                {
-                    ShowInfo("Chỉ có thể duyệt giao dịch đang chờ xử lý!");
-                    return;
-                }
-
-                if (ShowConfirmation($"Bạn có chắc chắn muốn duyệt giao dịch '{transactionId}'?"))
-                {
-                    ShowMessage($"Đã duyệt giao dịch: {transactionId}");
-                    // TODO: Implement approve transaction logic
-                    RefreshContent();
-                }
-            }
-            else
-            {
-                ShowInfo("Vui lòng chọn một giao dịch để duyệt!");
-            }
-        }
-
-        private void RejectTransaction(DataGridView dgv)
-        {
-            if (dgv.SelectedRows.Count > 0)
-            {
-                var selectedRow = dgv.SelectedRows[0];
-                string transactionId = selectedRow.Cells["TransactionID"]?.Value?.ToString() ??
-                                     selectedRow.Cells["TransactionCode"]?.Value?.ToString();
-
-                if (ShowConfirmation($"Bạn có chắc chắn muốn từ chối giao dịch '{transactionId}'?"))
-                {
-                    ShowMessage($"Đã từ chối giao dịch: {transactionId}");
-                    // TODO: Implement reject transaction logic
-                    RefreshContent();
-                }
-            }
-            else
-            {
-                ShowInfo("Vui lòng chọn một giao dịch để từ chối!");
-            }
-        }
-
+ 
         private void PrintReceipt(DataGridView dgv)
         {
             if (dgv.SelectedRows.Count > 0)
@@ -300,9 +255,24 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
         }
 
         // Action methods
-        private void ShowDepositForm() => ShowMessage("Mở form nạp tiền");
-        private void ShowWithdrawForm() => ShowMessage("Mở form rút tiền");
-        private void ShowTransferForm() => ShowMessage("Mở form chuyển khoản");
+        private void ShowDepositForm()
+        {
+            var depositForm = new DepositForm();
+            if (depositForm.ShowDialog() == DialogResult.OK)
+            {
+                RefreshContent();
+                ShowMessage("Giao dịch nạp tiền đã được thực hiện thành công!");
+            }
+        }
+        private void ShowWithdrawForm()
+        {
+            var withdrawForm = new WithDrawForm();
+            if (withdrawForm.ShowDialog() == DialogResult.OK)
+            {
+                RefreshContent();
+                ShowMessage("Giao dịch rút tiền đã được thực hiện thành công!");
+            }
+        }
         private void ShowApproveTransactionForm() => ShowMessage("Mở form duyệt giao dịch");
         private void ShowTransactionReportForm() => ShowMessage("Mở báo cáo giao dịch");
 

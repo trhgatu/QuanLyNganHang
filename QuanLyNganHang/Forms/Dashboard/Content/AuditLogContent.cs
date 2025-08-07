@@ -496,7 +496,6 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
         {
             try
             {
-                ShowMessage($"Đang tải logs cho user {user}...");
 
                 var dt = dataAccess.GetStandardAuditLogs(user);
 
@@ -538,7 +537,7 @@ namespace QuanLyNganHang.Forms.Dashboard.Content
                         FormatTriggerGrid();
                 }
 
-                ShowMessage($"✅ Đã tải {dt.Rows.Count} Standard, {dtFga.Rows.Count} FGA, {dtTrigger.Rows.Count} Trigger logs cho user {user}");
+           
             }
             catch (Exception ex)
             {

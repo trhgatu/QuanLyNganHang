@@ -362,6 +362,7 @@ namespace QuanLyNganHang.Forms
             this.btn_Grant_Revoke_Role.TabIndex = 8;
             this.btn_Grant_Revoke_Role.Text = "Grant Role";
             this.btn_Grant_Revoke_Role.UseVisualStyleBackColor = true;
+            this.btn_Grant_Revoke_Role.Click += new System.EventHandler(this.btn_Grant_Revoke_Role_Click);
             // 
             // dgv_grant_roles
             // 
@@ -416,6 +417,7 @@ namespace QuanLyNganHang.Forms
             this.btn_Grant_Login.TabIndex = 30;
             this.btn_Grant_Login.Text = "Cấp quyền login";
             this.btn_Grant_Login.UseVisualStyleBackColor = true;
+            this.btn_Grant_Login.Click += new System.EventHandler(this.btn_Grant_Login_Click);
             // 
             // btn_Revoke_Login
             // 
@@ -425,6 +427,7 @@ namespace QuanLyNganHang.Forms
             this.btn_Revoke_Login.TabIndex = 31;
             this.btn_Revoke_Login.Text = "Thu hồi quyền login";
             this.btn_Revoke_Login.UseVisualStyleBackColor = true;
+            this.btn_Revoke_Login.Click += new System.EventHandler(this.btn_Revoke_Login_Click);
             // 
             // label7
             // 
